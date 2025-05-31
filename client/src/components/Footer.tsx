@@ -71,18 +71,22 @@ export default function Footer() {
               size="lg"
               variant="secondary"
               className="bg-white hover:bg-slate-100 text-primary px-8 py-4 text-lg font-semibold shadow-lg"
-              onClick={() => handleSignup("Business Owner")}
+              asChild
             >
-              <Building className="mr-2 h-5 w-5" />
-              Get Started as Business
+              <Link href="/signup">
+                <Building className="mr-2 h-5 w-5" />
+                Get Started as Business
+              </Link>
             </Button>
             <Button 
               size="lg"
               className="bg-accent hover:bg-accent/90 text-white px-8 py-4 text-lg font-semibold shadow-lg"
-              onClick={() => handleSignup("Contractor")}
+              asChild
             >
-              <Wrench className="mr-2 h-5 w-5" />
-              Join as Contractor
+              <Link href="/signup">
+                <Wrench className="mr-2 h-5 w-5" />
+                Join as Contractor
+              </Link>
             </Button>
           </div>
 
