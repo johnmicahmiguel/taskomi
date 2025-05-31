@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,10 +15,7 @@ export default function Header() {
     }
   };
 
-  const handleSignup = (userType: string) => {
-    // This would redirect to signup flow in a real app
-    alert(`Redirecting to ${userType} signup flow...`);
-  };
+
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
@@ -60,8 +58,8 @@ export default function Header() {
             <Button variant="ghost" className="text-slate-600 hover:text-primary">
               Log In
             </Button>
-            <Button onClick={() => handleSignup("Business Owner")}>
-              Get Started
+            <Button asChild>
+              <Link href="/signup">Get Started</Link>
             </Button>
           </div>
 
@@ -103,8 +101,8 @@ export default function Header() {
                     <Button variant="ghost" className="w-full justify-start">
                       Log In
                     </Button>
-                    <Button onClick={() => handleSignup("Business Owner")} className="w-full">
-                      Get Started
+                    <Button asChild className="w-full">
+                      <Link href="/signup">Get Started</Link>
                     </Button>
                   </div>
                 </div>

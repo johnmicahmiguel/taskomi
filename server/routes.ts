@@ -46,6 +46,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User signup
+  app.post("/api/signup", async (req, res) => {
+    try {
+      const validatedData = insertUserSchema.parse(req.body);
+      
+      // Check if email already exists
+      const existing = await storage.getUserByEmail(validatedData.email);
+      if (existing) {
+        return res.status(400).json({ message: "Email already registered" });
+      }
+
+      const user = await storage.createUser(validatedData);
+      
+      // Return user without password
+      const { password, ...userResponse } = user;
+      res.json({ success: true, user: userResponse });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

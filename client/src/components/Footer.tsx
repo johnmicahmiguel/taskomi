@@ -5,6 +5,7 @@ import { Building, Wrench } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "wouter";
 
 export default function Footer() {
   const [email, setEmail] = useState("");
@@ -53,9 +54,7 @@ export default function Footer() {
     newsletterMutation.mutate(email);
   };
 
-  const handleSignup = (userType: string) => {
-    alert(`Redirecting to ${userType} signup flow...`);
-  };
+
 
   return (
     <>

@@ -1,10 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Building, Wrench } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Hero() {
-  const handleSignup = (userType: string) => {
-    alert(`Redirecting to ${userType} signup flow...`);
-  };
+
 
   return (
     <section className="bg-gradient-to-br from-primary/5 to-accent/5 py-20">
@@ -23,18 +22,22 @@ export default function Hero() {
             <Button 
               size="lg"
               className="bg-primary hover:bg-primary/90 text-white px-8 py-4 text-lg font-semibold shadow-lg"
-              onClick={() => handleSignup("Business Owner")}
+              asChild
             >
-              <Building className="mr-2 h-5 w-5" />
-              I'm a Business Owner
+              <Link href="/signup">
+                <Building className="mr-2 h-5 w-5" />
+                I'm a Business Owner
+              </Link>
             </Button>
             <Button 
               size="lg"
               className="bg-accent hover:bg-accent/90 text-white px-8 py-4 text-lg font-semibold shadow-lg"
-              onClick={() => handleSignup("Contractor")}
+              asChild
             >
-              <Wrench className="mr-2 h-5 w-5" />
-              I'm a Contractor
+              <Link href="/signup">
+                <Wrench className="mr-2 h-5 w-5" />
+                I'm a Contractor
+              </Link>
             </Button>
           </div>
         </div>
