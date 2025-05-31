@@ -55,8 +55,8 @@ export default function Header() {
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" className="text-slate-600 hover:text-primary">
-              Log In
+            <Button variant="ghost" className="text-slate-600 hover:text-primary" asChild>
+              <Link href="/login">Log In</Link>
             </Button>
             <Button asChild>
               <Link href="/signup">Get Started</Link>
@@ -98,8 +98,8 @@ export default function Header() {
                     Testimonials
                   </button>
                   <div className="pt-4 border-t space-y-2">
-                    <Button variant="ghost" className="w-full justify-start">
-                      Log In
+                    <Button variant="ghost" className="w-full justify-start" asChild>
+                      <Link href="/login">Log In</Link>
                     </Button>
                     <Button asChild className="w-full">
                       <Link href="/signup">Get Started</Link>
