@@ -384,7 +384,7 @@ export default function Features() {
                       )}
                     </div>
                     <div className="flex-1">
-                      <h4 className={`font-semibold mb-2 transition-all duration-500 ${
+                      <h4 className={`font-semibold mb-2 transition-all duration-300 ${
                         isActive ? 'text-slate-900 text-lg' : 'text-slate-800'
                       }`}>
                         <span className="text-xs text-primary font-medium mr-2">
@@ -393,7 +393,7 @@ export default function Features() {
                         <br />
                         {step.title}
                       </h4>
-                      <p className={`text-sm transition-colors duration-500 ${
+                      <p className={`text-sm transition-colors duration-300 ${
                         isActive ? 'text-slate-700' : 'text-slate-600'
                       }`}>
                         {step.description}
