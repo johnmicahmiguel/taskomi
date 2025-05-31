@@ -20,6 +20,7 @@ export default function Dashboard() {
   const [isVerificationOpen, setIsVerificationOpen] = useState(false);
   const [otp, setOtp] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
+  const [displayedOtp, setDisplayedOtp] = useState("");
 
   useEffect(() => {
     // Check for user data in localStorage
@@ -47,12 +48,20 @@ export default function Dashboard() {
       const response = await apiRequest("POST", "/api/send-otp", { email });
       return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       setIsOtpSent(true);
-      toast({
-        title: "Verification code sent",
-        description: "Please check your email for the verification code.",
-      });
+      if (data.developmentOtp) {
+        setDisplayedOtp(data.developmentOtp);
+        toast({
+          title: "Verification code generated",
+          description: "Your verification code is displayed below.",
+        });
+      } else {
+        toast({
+          title: "Verification code sent",
+          description: "Please check your email for the verification code.",
+        });
+      }
     },
     onError: (error: any) => {
       toast({
@@ -75,6 +84,7 @@ export default function Dashboard() {
       setIsVerificationOpen(false);
       setOtp("");
       setIsOtpSent(false);
+      setDisplayedOtp("");
       toast({
         title: "Account verified!",
         description: "Your account has been successfully verified.",
@@ -241,6 +251,15 @@ export default function Dashboard() {
                             </div>
                           ) : (
                             <div className="space-y-4">
+                              {displayedOtp && (
+                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                                  <p className="text-sm text-blue-600 mb-2">Your verification code:</p>
+                                  <div className="text-2xl font-mono font-bold text-blue-800 tracking-wider">
+                                    {displayedOtp}
+                                  </div>
+                                  <p className="text-xs text-blue-500 mt-2">Copy this code and enter it below</p>
+                                </div>
+                              )}
                               <div>
                                 <Label htmlFor="otp">Verification Code</Label>
                                 <Input
@@ -259,6 +278,7 @@ export default function Dashboard() {
                                   onClick={() => {
                                     setIsOtpSent(false);
                                     setOtp("");
+                                    setDisplayedOtp("");
                                   }}
                                   disabled={verifyOtpMutation.isPending}
                                   className="flex-1"

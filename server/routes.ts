@@ -132,19 +132,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         expiresAt
       });
 
-      // Send email with OTP
-      const emailSent = await sendEmail({
-        to: email,
-        from: "noreply@connectpro.com",
-        subject: "Verify Your ConnectPro Account",
-        htmlContent: getOTPEmailTemplate(otp, user.firstName)
+      // For development: return OTP in response instead of sending email
+      // TODO: Remove this and uncomment email sending when domain is ready
+      res.json({ 
+        success: true, 
+        message: "Verification code generated",
+        developmentOtp: otp // Only for development - remove in production
       });
-
-      if (!emailSent) {
-        return res.status(500).json({ message: "Failed to send verification email" });
-      }
-
-      res.json({ success: true, message: "Verification code sent to your email" });
     } catch (error) {
       console.error("Send OTP error:", error);
       res.status(500).json({ message: "Internal server error" });
