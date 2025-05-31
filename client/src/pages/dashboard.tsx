@@ -1,42 +1,103 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building, Wrench, User, Mail, Phone, MapPin, LogOut } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Building, Wrench, User, Mail, Phone, MapPin, LogOut, Shield, ShieldCheck, Clock } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isVerificationOpen, setIsVerificationOpen] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [isOtpSent, setIsOtpSent] = useState(false);
 
   useEffect(() => {
-    console.log("Dashboard useEffect triggered");
     // Check for user data in localStorage
     const storedUser = localStorage.getItem('currentUser');
-    console.log("Stored user data:", storedUser);
     if (storedUser) {
       try {
         const userData = JSON.parse(storedUser);
-        console.log("Parsed user data:", userData);
         setUser(userData);
         setIsLoading(false);
       } catch (error) {
-        console.log("Error parsing user data:", error);
         localStorage.removeItem('currentUser');
         // Use setTimeout to avoid updating component during render
         setTimeout(() => setLocation("/login"), 0);
         return;
       }
     } else {
-      console.log("No user data found, redirecting to login");
       // Use setTimeout to avoid updating component during render
       setTimeout(() => setLocation("/login"), 0);
       return;
     }
   }, [setLocation]);
+
+  const sendOtpMutation = useMutation({
+    mutationFn: async (email: string) => {
+      const response = await apiRequest("POST", "/api/send-otp", { email });
+      return await response.json();
+    },
+    onSuccess: () => {
+      setIsOtpSent(true);
+      toast({
+        title: "Verification code sent",
+        description: "Please check your email for the verification code.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to send verification code",
+        description: error.message || "Please try again later.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const verifyOtpMutation = useMutation({
+    mutationFn: async ({ email, otp }: { email: string; otp: string }) => {
+      const response = await apiRequest("POST", "/api/verify-otp", { email, otp });
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      // Update user data in localStorage and state
+      localStorage.setItem('currentUser', JSON.stringify(data.user));
+      setUser(data.user);
+      setIsVerificationOpen(false);
+      setOtp("");
+      setIsOtpSent(false);
+      toast({
+        title: "Account verified!",
+        description: "Your account has been successfully verified.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Verification failed",
+        description: error.message || "Invalid or expired code. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSendOtp = () => {
+    sendOtpMutation.mutate(user.email);
+  };
+
+  const handleVerifyOtp = () => {
+    if (otp.length === 6) {
+      verifyOtpMutation.mutate({ email: user.email, otp });
+    }
+  };
 
   const handleLogout = () => {
     // Clear stored auth data and redirect
@@ -127,9 +188,98 @@ export default function Dashboard() {
                 </div>
               )}
               
-              <div className="flex items-center space-x-2 text-slate-600">
-                <Mail className="h-4 w-4" />
-                <span>{user.email}</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-slate-600">
+                  <Mail className="h-4 w-4" />
+                  <span>{user.email}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  {user.isVerified ? (
+                    <Badge variant="default" className="bg-green-500 hover:bg-green-600">
+                      <ShieldCheck className="h-3 w-3 mr-1" />
+                      Verified
+                    </Badge>
+                  ) : (
+                    <Dialog open={isVerificationOpen} onOpenChange={setIsVerificationOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="text-orange-600 border-orange-200 hover:bg-orange-50">
+                          <Shield className="h-3 w-3 mr-1" />
+                          Get Verified
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Verify Your Account</DialogTitle>
+                          <DialogDescription>
+                            {!isOtpSent 
+                              ? "We'll send a verification code to your email address."
+                              : "Enter the 6-digit code sent to your email."
+                            }
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          {!isOtpSent ? (
+                            <div className="space-y-4">
+                              <div className="flex items-center space-x-2 text-sm text-slate-600">
+                                <Mail className="h-4 w-4" />
+                                <span>{user.email}</span>
+                              </div>
+                              <Button 
+                                onClick={handleSendOtp}
+                                disabled={sendOtpMutation.isPending}
+                                className="w-full"
+                              >
+                                {sendOtpMutation.isPending ? (
+                                  <>
+                                    <Clock className="h-4 w-4 mr-2 animate-spin" />
+                                    Sending...
+                                  </>
+                                ) : (
+                                  "Send Verification Code"
+                                )}
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="space-y-4">
+                              <div>
+                                <Label htmlFor="otp">Verification Code</Label>
+                                <Input
+                                  id="otp"
+                                  type="text"
+                                  placeholder="Enter 6-digit code"
+                                  value={otp}
+                                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                  maxLength={6}
+                                  className="text-center text-lg tracking-widest"
+                                />
+                              </div>
+                              <div className="flex space-x-2">
+                                <Button
+                                  variant="outline"
+                                  onClick={() => {
+                                    setIsOtpSent(false);
+                                    setOtp("");
+                                  }}
+                                  disabled={verifyOtpMutation.isPending}
+                                  className="flex-1"
+                                >
+                                  Send New Code
+                                </Button>
+                                <Button
+                                  onClick={handleVerifyOtp}
+                                  disabled={otp.length !== 6 || verifyOtpMutation.isPending}
+                                  className="flex-1"
+                                >
+                                  {verifyOtpMutation.isPending ? "Verifying..." : "Verify"}
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  )}
+                </div>
               </div>
               
               {user.phoneNumber && (

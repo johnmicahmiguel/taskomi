@@ -33,28 +33,21 @@ export default function Login() {
 
   const loginMutation = useMutation({
     mutationFn: async (data: LoginFormData) => {
-      console.log("Login mutation started with data:", data);
       const response = await apiRequest("POST", "/api/login", data);
       const jsonData = await response.json();
-      console.log("Login API response:", jsonData);
       return jsonData;
     },
     onSuccess: (response: any) => {
-      console.log("Login onSuccess called with response:", response);
       // Store user data in localStorage
       localStorage.setItem('currentUser', JSON.stringify(response.user));
-      console.log("User data stored in localStorage");
       
       toast({
         title: "Welcome back!",
         description: "You have successfully logged in.",
       });
-      console.log("About to navigate to dashboard");
       setLocation("/dashboard");
-      console.log("Navigation to dashboard called");
     },
     onError: (error: any) => {
-      console.log("Login onError called with error:", error);
       toast({
         title: "Login failed",
         description: error.message || "Invalid email or password. Please try again.",
