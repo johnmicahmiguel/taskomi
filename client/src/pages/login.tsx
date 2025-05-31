@@ -35,8 +35,9 @@ export default function Login() {
     mutationFn: async (data: LoginFormData) => {
       console.log("Login mutation started with data:", data);
       const response = await apiRequest("POST", "/api/login", data);
-      console.log("Login API response:", response);
-      return response;
+      const jsonData = await response.json();
+      console.log("Login API response:", jsonData);
+      return jsonData;
     },
     onSuccess: (response: any) => {
       console.log("Login onSuccess called with response:", response);
