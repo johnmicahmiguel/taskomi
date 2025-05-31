@@ -33,6 +33,15 @@ export const newsletterSubscriptions = pgTable("newsletter_subscriptions", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const otpVerifications = pgTable("otp_verifications", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull(),
+  otp: text("otp").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  isUsed: boolean("is_used").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   isVerified: true,
@@ -49,9 +58,17 @@ export const insertNewsletterSubscriptionSchema = createInsertSchema(newsletterS
   createdAt: true,
 });
 
+export const insertOtpVerificationSchema = createInsertSchema(otpVerifications).omit({
+  id: true,
+  isUsed: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type ContactSubmission = typeof contactSubmissions.$inferSelect;
 export type InsertContactSubmission = z.infer<typeof insertContactSubmissionSchema>;
 export type NewsletterSubscription = typeof newsletterSubscriptions.$inferSelect;
 export type InsertNewsletterSubscription = z.infer<typeof insertNewsletterSubscriptionSchema>;
+export type OtpVerification = typeof otpVerifications.$inferSelect;
+export type InsertOtpVerification = z.infer<typeof insertOtpVerificationSchema>;

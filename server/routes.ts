@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertContactSubmissionSchema, insertNewsletterSubscriptionSchema, insertUserSchema } from "@shared/schema";
 import { z } from "zod";
+import { sendEmail, generateOTP, getOTPEmailTemplate } from "./email";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Contact form submission
@@ -97,6 +98,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { password: _, ...userResponse } = user;
       res.json({ success: true, user: userResponse });
     } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Send OTP for email verification
+  app.post("/api/send-otp", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      // Check if user exists
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      if (user.isVerified) {
+        return res.status(400).json({ message: "User already verified" });
+      }
+
+      // Generate OTP and expiration time (10 minutes from now)
+      const otp = generateOTP();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+      // Store OTP in database
+      await storage.createOtpVerification({
+        email,
+        otp,
+        expiresAt
+      });
+
+      // Send email with OTP
+      const emailSent = await sendEmail({
+        to: email,
+        from: "noreply@connectpro.com",
+        subject: "Verify Your ConnectPro Account",
+        htmlContent: getOTPEmailTemplate(otp, user.firstName)
+      });
+
+      if (!emailSent) {
+        return res.status(500).json({ message: "Failed to send verification email" });
+      }
+
+      res.json({ success: true, message: "Verification code sent to your email" });
+    } catch (error) {
+      console.error("Send OTP error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Verify OTP
+  app.post("/api/verify-otp", async (req, res) => {
+    try {
+      const { email, otp } = req.body;
+      
+      if (!email || !otp) {
+        return res.status(400).json({ message: "Email and OTP are required" });
+      }
+
+      // Check if OTP is valid
+      const otpRecord = await storage.getValidOtp(email, otp);
+      if (!otpRecord) {
+        return res.status(400).json({ message: "Invalid or expired OTP" });
+      }
+
+      // Get user
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Mark OTP as used
+      await storage.markOtpAsUsed(otpRecord.id);
+
+      // Update user verification status
+      const updatedUser = await storage.updateUserVerification(user.id, true);
+      if (!updatedUser) {
+        return res.status(500).json({ message: "Failed to update user verification" });
+      }
+
+      // Return updated user without password
+      const { password: _, ...userResponse } = updatedUser;
+      res.json({ success: true, user: userResponse, message: "Account verified successfully" });
+    } catch (error) {
+      console.error("Verify OTP error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
