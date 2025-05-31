@@ -2,21 +2,37 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Building, Wrench, User, Mail, Phone, MapPin, LogOut } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect, useState } from "react";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const { data: user, isLoading } = useQuery({
-    queryKey: ["/api/user"],
-    retry: false,
-  });
+  useEffect(() => {
+    // Check for user data in localStorage
+    const storedUser = localStorage.getItem('currentUser');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        localStorage.removeItem('currentUser');
+        setLocation("/login");
+        return;
+      }
+    } else {
+      setLocation("/login");
+      return;
+    }
+    setIsLoading(false);
+  }, [setLocation]);
 
   const handleLogout = () => {
-    // Clear any stored auth data and redirect
+    // Clear stored auth data and redirect
+    localStorage.removeItem('currentUser');
     toast({
       title: "Logged out",
       description: "You have been successfully logged out.",
@@ -36,7 +52,6 @@ export default function Dashboard() {
   }
 
   if (!user) {
-    setLocation("/login");
     return null;
   }
 

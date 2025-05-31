@@ -35,7 +35,10 @@ export default function Login() {
     mutationFn: async (data: LoginFormData) => {
       return apiRequest("POST", "/api/login", data);
     },
-    onSuccess: () => {
+    onSuccess: (response: any) => {
+      // Store user data in localStorage
+      localStorage.setItem('currentUser', JSON.stringify(response.user));
+      
       toast({
         title: "Welcome back!",
         description: "You have successfully logged in.",

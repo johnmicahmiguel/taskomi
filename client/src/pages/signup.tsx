@@ -65,7 +65,10 @@ export default function Signup() {
         skills: userType === "contractor" ? selectedSkills : null,
       });
     },
-    onSuccess: () => {
+    onSuccess: (response: any) => {
+      // Store user data in localStorage
+      localStorage.setItem('currentUser', JSON.stringify(response.user));
+      
       toast({
         title: "Account created successfully!",
         description: "Welcome to ConnectPro. You can now start exploring opportunities.",
