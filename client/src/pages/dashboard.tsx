@@ -13,20 +13,25 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    console.log("Dashboard useEffect triggered");
     // Check for user data in localStorage
     const storedUser = localStorage.getItem('currentUser');
+    console.log("Stored user data:", storedUser);
     if (storedUser) {
       try {
         const userData = JSON.parse(storedUser);
+        console.log("Parsed user data:", userData);
         setUser(userData);
         setIsLoading(false);
       } catch (error) {
+        console.log("Error parsing user data:", error);
         localStorage.removeItem('currentUser');
         // Use setTimeout to avoid updating component during render
         setTimeout(() => setLocation("/login"), 0);
         return;
       }
     } else {
+      console.log("No user data found, redirecting to login");
       // Use setTimeout to avoid updating component during render
       setTimeout(() => setLocation("/login"), 0);
       return;
