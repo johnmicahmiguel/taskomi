@@ -73,6 +73,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User login
+  app.post("/api/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      // Check password (in a real app, you'd hash and compare passwords)
+      if (user.password !== password) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      // Return user without password
+      const { password: _, ...userResponse } = user;
+      res.json({ success: true, user: userResponse });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get current user
+  app.get("/api/user", async (req, res) => {
+    // For now, we'll implement a simple check
+    // In a real app, you'd validate a session or JWT token
+    res.status(401).json({ message: "Not authenticated" });
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
