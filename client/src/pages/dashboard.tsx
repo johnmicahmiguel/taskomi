@@ -17,17 +17,20 @@ export default function Dashboard() {
     const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        const userData = JSON.parse(storedUser);
+        setUser(userData);
+        setIsLoading(false);
       } catch (error) {
         localStorage.removeItem('currentUser');
-        setLocation("/login");
+        // Use setTimeout to avoid updating component during render
+        setTimeout(() => setLocation("/login"), 0);
         return;
       }
     } else {
-      setLocation("/login");
+      // Use setTimeout to avoid updating component during render
+      setTimeout(() => setLocation("/login"), 0);
       return;
     }
-    setIsLoading(false);
   }, [setLocation]);
 
   const handleLogout = () => {
