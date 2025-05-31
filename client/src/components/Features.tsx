@@ -200,7 +200,16 @@ export default function Features() {
       const timeSinceLastWheel = now - lastWheelTime.current;
       
       // Reset accumulator if too much time has passed (debounce)
-      if (timeSinceLastWheel > 200) {
+      if (timeSinceLastWheel > 300) {
+        wheelAccumulator.current = 0;
+      }
+      
+      // Only accumulate in the same direction to prevent oscillation
+      const deltaDirection = e.deltaY > 0 ? 1 : -1;
+      const accumulatorDirection = wheelAccumulator.current > 0 ? 1 : wheelAccumulator.current < 0 ? -1 : 0;
+      
+      // If direction changed, reset accumulator to prevent back-and-forth
+      if (accumulatorDirection !== 0 && accumulatorDirection !== deltaDirection) {
         wheelAccumulator.current = 0;
       }
       
@@ -208,16 +217,16 @@ export default function Features() {
       wheelAccumulator.current += e.deltaY;
       lastWheelTime.current = now;
       
-      // Lower threshold and smoother detection
-      const threshold = 50;
+      // Higher threshold for gentler scrolling to prevent oscillation
+      const threshold = 80;
       if (Math.abs(wheelAccumulator.current) >= threshold) {
         const direction = wheelAccumulator.current > 0 ? 1 : -1;
         changeStep(direction);
         wheelAccumulator.current = 0; // Reset after triggering
         
-        // Shorter lock to prevent rapid firing but allow smooth transitions
+        // Longer lock to prevent oscillation during gentle scrolling
         setIsLocked(true);
-        setTimeout(() => setIsLocked(false), 300);
+        setTimeout(() => setIsLocked(false), 400);
       }
     };
 
