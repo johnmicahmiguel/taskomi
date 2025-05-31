@@ -102,8 +102,12 @@ const FeatureVisual = ({ step, isActive }: { step: number; isActive: boolean }) 
 
 export default function Features() {
   const [activeStep, setActiveStep] = useState(0);
+  const [isScrolling, setIsScrolling] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastScrollTime = useRef(0);
+  const scrollDirectionRef = useRef(0);
 
   const steps = [
     {
@@ -133,32 +137,168 @@ export default function Features() {
     }
   ];
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!sectionRef.current) return;
+  const scrollToStep = (stepIndex: number) => {
+    if (!sectionRef.current) return;
+    
+    const sectionTop = sectionRef.current.offsetTop;
+    const sectionHeight = sectionRef.current.offsetHeight;
+    const stepHeight = sectionHeight / (steps.length + 2); // +2 for intro and outro
+    const targetPosition = sectionTop + stepHeight + (stepIndex * stepHeight);
+    
+    setIsScrolling(true);
+    window.scrollTo({
+      top: targetPosition - window.innerHeight / 3,
+      behavior: 'smooth'
+    });
+    
+    setTimeout(() => {
+      setIsScrolling(false);
+    }, 800);
+  };
 
+  useEffect(() => {
+    let ticking = false;
+
+    const handleScroll = () => {
+      if (isScrolling || !sectionRef.current) return;
+
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const now = Date.now();
+          const timeDelta = now - lastScrollTime.current;
+          
+          // Throttle rapid scroll events
+          if (timeDelta < 100) {
+            ticking = false;
+            return;
+          }
+          
+          const sectionTop = sectionRef.current!.offsetTop;
+          const sectionHeight = sectionRef.current!.offsetHeight;
+          const scrollPosition = window.scrollY + window.innerHeight / 3;
+          
+          // Check if we're in the interactive section bounds
+          const interactiveSectionStart = sectionTop + (sectionHeight * 0.2);
+          const interactiveSectionEnd = sectionTop + (sectionHeight * 0.8);
+          
+          if (scrollPosition >= interactiveSectionStart && scrollPosition <= interactiveSectionEnd) {
+            const relativePosition = scrollPosition - interactiveSectionStart;
+            const interactiveHeight = interactiveSectionEnd - interactiveSectionStart;
+            const progress = relativePosition / interactiveHeight;
+            const newStep = Math.min(Math.max(Math.floor(progress * steps.length), 0), steps.length - 1);
+            
+            if (newStep !== activeStep) {
+              setActiveStep(newStep);
+            }
+          }
+          
+          lastScrollTime.current = now;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    const handleWheel = (e: WheelEvent) => {
+      if (!sectionRef.current) return;
+      
       const sectionTop = sectionRef.current.offsetTop;
       const sectionHeight = sectionRef.current.offsetHeight;
-      const scrollPosition = window.scrollY + window.innerHeight / 2;
-
-      // Check if we're in the section
-      if (scrollPosition >= sectionTop && scrollPosition <= sectionTop + sectionHeight) {
-        // Calculate which step should be active based on scroll position
-        const relativePosition = scrollPosition - sectionTop;
-        const stepHeight = sectionHeight / (steps.length + 1); // +1 for intro
-        const currentStep = Math.floor(relativePosition / stepHeight) - 1; // -1 for intro offset
+      const scrollPosition = window.scrollY + window.innerHeight / 3;
+      
+      // Check if we're in the stepper section
+      const interactiveSectionStart = sectionTop + (sectionHeight * 0.2);
+      const interactiveSectionEnd = sectionTop + (sectionHeight * 0.8);
+      
+      if (scrollPosition >= interactiveSectionStart && scrollPosition <= interactiveSectionEnd) {
+        e.preventDefault();
         
-        if (currentStep >= 0 && currentStep < steps.length) {
-          setActiveStep(currentStep);
+        const now = Date.now();
+        if (now - lastScrollTime.current < 300) return; // Debounce rapid wheel events
+        
+        const direction = e.deltaY > 0 ? 1 : -1;
+        let newStep = activeStep;
+        
+        if (direction > 0 && activeStep < steps.length - 1) {
+          newStep = activeStep + 1;
+        } else if (direction < 0 && activeStep > 0) {
+          newStep = activeStep - 1;
+        }
+        
+        if (newStep !== activeStep) {
+          setActiveStep(newStep);
+          scrollToStep(newStep);
+          lastScrollTime.current = now;
         }
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    handleScroll(); // Initial check
+    // Touch handling for mobile
+    let touchStartY = 0;
+    let touchStartTime = 0;
 
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [steps.length]);
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartY = e.touches[0].clientY;
+      touchStartTime = Date.now();
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!sectionRef.current) return;
+      
+      const sectionTop = sectionRef.current.offsetTop;
+      const sectionHeight = sectionRef.current.offsetHeight;
+      const scrollPosition = window.scrollY + window.innerHeight / 3;
+      
+      const interactiveSectionStart = sectionTop + (sectionHeight * 0.2);
+      const interactiveSectionEnd = sectionTop + (sectionHeight * 0.8);
+      
+      if (scrollPosition >= interactiveSectionStart && scrollPosition <= interactiveSectionEnd) {
+        const touchCurrentY = e.touches[0].clientY;
+        const touchDelta = touchStartY - touchCurrentY;
+        const timeDelta = Date.now() - touchStartTime;
+        
+        // Only respond to significant, deliberate swipes
+        if (Math.abs(touchDelta) > 50 && timeDelta > 100) {
+          e.preventDefault();
+          
+          const direction = touchDelta > 0 ? 1 : -1;
+          let newStep = activeStep;
+          
+          if (direction > 0 && activeStep < steps.length - 1) {
+            newStep = activeStep + 1;
+          } else if (direction < 0 && activeStep > 0) {
+            newStep = activeStep - 1;
+          }
+          
+          if (newStep !== activeStep) {
+            setActiveStep(newStep);
+            scrollToStep(newStep);
+          }
+          
+          touchStartY = touchCurrentY;
+          touchStartTime = Date.now();
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+    // Initial check
+    handleScroll();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, [activeStep, isScrolling, steps.length]);
 
   return (
     <section ref={sectionRef} className="py-20 bg-white" id="features">
@@ -184,45 +324,90 @@ export default function Features() {
               <p className="text-slate-600">
                 Find, hire, and collaborate with top contractors for your projects
               </p>
+              
+              {/* Step Progress Indicator */}
+              <div className="flex items-center justify-center lg:justify-start mt-6 space-x-2">
+                <span className="text-sm text-slate-500">Scroll to explore:</span>
+                <div className="flex space-x-1 ml-2">
+                  {steps.map((_, index) => (
+                    <div
+                      key={index}
+                      className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                        index === activeStep 
+                          ? 'bg-primary w-6' 
+                          : index < activeStep 
+                          ? 'bg-primary/60' 
+                          : 'bg-slate-300'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-xs text-slate-400 ml-2">
+                  {activeStep + 1}/{steps.length}
+                </span>
+              </div>
             </div>
 
-            <div className="space-y-8">
+            <div className="space-y-8 relative">
+              {/* Progress Line */}
+              <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-slate-200">
+                <div 
+                  className="w-full bg-primary transition-all duration-700 ease-out"
+                  style={{
+                    height: `${((activeStep + 1) / steps.length) * 100}%`
+                  }}
+                />
+              </div>
+
               {steps.map((step, index) => {
                 const Icon = step.icon;
                 const isActive = index === activeStep;
+                const isCompleted = index < activeStep;
                 
                 return (
                   <div
                     key={index}
                     ref={(el) => (stepRefs.current[index] = el)}
-                    className={`flex items-start space-x-4 transition-all duration-500 ease-out ${
+                    className={`flex items-start space-x-4 transition-all duration-700 ease-out relative z-10 ${
                       isActive 
-                        ? 'transform scale-105 bg-primary/5 -mx-4 px-4 py-3 rounded-xl' 
-                        : 'opacity-70'
+                        ? 'transform scale-105 bg-primary/5 -mx-4 px-4 py-4 rounded-xl shadow-sm' 
+                        : isCompleted
+                        ? 'opacity-80'
+                        : 'opacity-60'
                     }`}
                   >
-                    <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300 ${
+                    <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-500 ${
                       isActive 
-                        ? 'bg-primary shadow-lg shadow-primary/25 scale-110' 
-                        : 'bg-primary/70'
+                        ? 'bg-primary shadow-lg shadow-primary/25 scale-110 ring-4 ring-primary/20' 
+                        : isCompleted
+                        ? 'bg-primary/80'
+                        : 'bg-primary/50'
                     }`}>
-                      <Icon className="h-5 w-5 text-white" />
+                      {isCompleted ? (
+                        <CheckCircle className="h-5 w-5 text-white" />
+                      ) : (
+                        <Icon className="h-5 w-5 text-white" />
+                      )}
                     </div>
                     <div className="flex-1">
-                      <h4 className={`font-semibold mb-2 transition-colors duration-300 ${
+                      <h4 className={`font-semibold mb-2 transition-all duration-500 ${
                         isActive ? 'text-slate-900 text-lg' : 'text-slate-800'
                       }`}>
+                        <span className="text-xs text-primary font-medium mr-2">
+                          STEP {index + 1}
+                        </span>
+                        <br />
                         {step.title}
                       </h4>
-                      <p className={`text-sm transition-colors duration-300 ${
+                      <p className={`text-sm transition-colors duration-500 ${
                         isActive ? 'text-slate-700' : 'text-slate-600'
                       }`}>
                         {step.description}
                       </p>
                     </div>
                     {isActive && (
-                      <div className="flex-shrink-0">
-                        <Zap className="h-5 w-5 text-primary animate-pulse" />
+                      <div className="flex-shrink-0 animate-bounce">
+                        <Zap className="h-5 w-5 text-primary" />
                       </div>
                     )}
                   </div>
@@ -232,9 +417,20 @@ export default function Features() {
           </div>
 
           {/* Visual - Right Side */}
-          <div className="flex items-center justify-center lg:sticky lg:top-24 lg:h-96">
+          <div className="flex flex-col items-center justify-center lg:sticky lg:top-24 lg:h-96">
             <div className="w-full max-w-sm">
               <FeatureVisual step={activeStep} isActive={true} />
+            </div>
+            
+            {/* Scroll Hint */}
+            <div className="mt-8 text-center">
+              <p className="text-sm text-slate-500 mb-2">Use scroll wheel or swipe to navigate</p>
+              <div className="flex items-center justify-center space-x-2">
+                <div className="w-4 h-6 border-2 border-slate-300 rounded-full flex justify-center">
+                  <div className="w-1 h-2 bg-slate-400 rounded-full mt-1 animate-bounce" />
+                </div>
+                <span className="text-xs text-slate-400">Scroll</span>
+              </div>
             </div>
           </div>
         </div>
