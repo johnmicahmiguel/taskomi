@@ -49,10 +49,10 @@ export default function Signup() {
       firstName: "",
       lastName: "",
       userType: "",
-      companyName: "",
-      phoneNumber: "",
-      location: "",
-      bio: "",
+      companyName: null,
+      phoneNumber: null,
+      location: null,
+      bio: null,
       skills: [],
     },
   });
@@ -256,7 +256,7 @@ export default function Signup() {
                       <FormItem>
                         <FormLabel>Company Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="Your Company Name" {...field} />
+                          <Input placeholder="Your Company Name" {...field} value={field.value || ""} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -272,7 +272,7 @@ export default function Signup() {
                       <FormItem>
                         <FormLabel>Phone Number</FormLabel>
                         <FormControl>
-                          <Input placeholder="(555) 123-4567" {...field} />
+                          <Input placeholder="(555) 123-4567" {...field} value={field.value || ""} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -286,7 +286,7 @@ export default function Signup() {
                       <FormItem>
                         <FormLabel>Location</FormLabel>
                         <FormControl>
-                          <Input placeholder="City, State" {...field} />
+                          <Input placeholder="City, State" {...field} value={field.value || ""} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -349,6 +349,7 @@ export default function Signup() {
                           }
                           className="min-h-[100px]"
                           {...field} 
+                          value={field.value || ""}
                         />
                       </FormControl>
                       <FormMessage />
