@@ -3,7 +3,7 @@ import { Building, Wrench, UserPlus, ListChecks, Search, MessageSquare, Handshak
 
 // Visual components for each step
 const FeatureVisual = ({ step, isActive }: { step: number; isActive: boolean }) => {
-  const baseClasses = "transition-all duration-700 ease-out";
+  const baseClasses = "transition-all duration-500 ease-out";
   const activeClasses = isActive ? "opacity-100 scale-100" : "opacity-30 scale-95";
 
   const visuals = [
@@ -152,10 +152,10 @@ export default function Features() {
       isAnimatingRef.current = true;
       setActiveStep(newStep);
       
-      // Clear animation lock after transition
+      // Shorter animation lock for smoother transitions
       setTimeout(() => {
         isAnimatingRef.current = false;
-      }, 600);
+      }, 300);
     }
   };
 
@@ -199,8 +199,8 @@ export default function Features() {
       const now = Date.now();
       const timeSinceLastWheel = now - lastWheelTime.current;
       
-      // Reset accumulator if too much time has passed
-      if (timeSinceLastWheel > 150) {
+      // Reset accumulator if too much time has passed (debounce)
+      if (timeSinceLastWheel > 200) {
         wheelAccumulator.current = 0;
       }
       
@@ -208,16 +208,16 @@ export default function Features() {
       wheelAccumulator.current += e.deltaY;
       lastWheelTime.current = now;
       
-      // Only trigger step change when accumulator crosses threshold
-      const threshold = 100;
+      // Lower threshold and smoother detection
+      const threshold = 50;
       if (Math.abs(wheelAccumulator.current) >= threshold) {
         const direction = wheelAccumulator.current > 0 ? 1 : -1;
         changeStep(direction);
         wheelAccumulator.current = 0; // Reset after triggering
         
-        // Lock interactions briefly to prevent rapid firing
+        // Shorter lock to prevent rapid firing but allow smooth transitions
         setIsLocked(true);
-        setTimeout(() => setIsLocked(false), 500);
+        setTimeout(() => setIsLocked(false), 300);
       }
     };
 
@@ -249,14 +249,14 @@ export default function Features() {
       const timeDelta = Date.now() - touchStartTime;
       const velocity = Math.abs(touchDelta) / timeDelta;
       
-      // More sensitive thresholds for better responsiveness
-      if (Math.abs(touchDelta) > 30 && velocity > 0.3) {
+      // Improved thresholds for smoother touch navigation
+      if (Math.abs(touchDelta) > 25 && velocity > 0.2) {
         const direction = touchDelta > 0 ? 1 : -1;
         changeStep(direction);
         
-        // Lock interactions briefly
+        // Shorter lock consistent with wheel handling
         setIsLocked(true);
-        setTimeout(() => setIsLocked(false), 500);
+        setTimeout(() => setIsLocked(false), 300);
       }
     };
 
@@ -346,7 +346,7 @@ export default function Features() {
               {/* Progress Line */}
               <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-slate-200">
                 <div 
-                  className="w-full bg-primary transition-all duration-700 ease-out"
+                  className="w-full bg-primary transition-all duration-300 ease-out"
                   style={{
                     height: `${((activeStep + 1) / steps.length) * 100}%`
                   }}
@@ -362,7 +362,7 @@ export default function Features() {
                   <div
                     key={index}
                     ref={(el) => (stepRefs.current[index] = el)}
-                    className={`flex items-start space-x-4 transition-all duration-700 ease-out relative z-10 ${
+                    className={`flex items-start space-x-4 transition-all duration-300 ease-out relative z-10 ${
                       isActive 
                         ? 'transform scale-105 bg-primary/5 -mx-4 px-4 py-4 rounded-xl shadow-sm' 
                         : isCompleted
@@ -370,7 +370,7 @@ export default function Features() {
                         : 'opacity-60'
                     }`}
                   >
-                    <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-500 ${
+                    <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300 ${
                       isActive 
                         ? 'bg-primary shadow-lg shadow-primary/25 scale-110 ring-4 ring-primary/20' 
                         : isCompleted
