@@ -102,12 +102,13 @@ const FeatureVisual = ({ step, isActive }: { step: number; isActive: boolean }) 
 
 export default function Features() {
   const [activeStep, setActiveStep] = useState(0);
-  const [isScrolling, setIsScrolling] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
+  const [isInSection, setIsInSection] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastScrollTime = useRef(0);
-  const scrollDirectionRef = useRef(0);
+  const lastWheelTime = useRef(0);
+  const wheelAccumulator = useRef(0);
+  const isAnimatingRef = useRef(false);
 
   const steps = [
     {
@@ -137,154 +138,148 @@ export default function Features() {
     }
   ];
 
-  const scrollToStep = (stepIndex: number) => {
-    if (!sectionRef.current) return;
+  const changeStep = (direction: number) => {
+    if (isAnimatingRef.current) return;
     
-    const sectionTop = sectionRef.current.offsetTop;
-    const sectionHeight = sectionRef.current.offsetHeight;
-    const stepHeight = sectionHeight / (steps.length + 2); // +2 for intro and outro
-    const targetPosition = sectionTop + stepHeight + (stepIndex * stepHeight);
+    let newStep = activeStep;
+    if (direction > 0 && activeStep < steps.length - 1) {
+      newStep = activeStep + 1;
+    } else if (direction < 0 && activeStep > 0) {
+      newStep = activeStep - 1;
+    }
     
-    setIsScrolling(true);
-    window.scrollTo({
-      top: targetPosition - window.innerHeight / 3,
-      behavior: 'smooth'
-    });
-    
-    setTimeout(() => {
-      setIsScrolling(false);
-    }, 800);
+    if (newStep !== activeStep) {
+      isAnimatingRef.current = true;
+      setActiveStep(newStep);
+      
+      // Clear animation lock after transition
+      setTimeout(() => {
+        isAnimatingRef.current = false;
+      }, 600);
+    }
   };
 
   useEffect(() => {
-    let ticking = false;
-
     const handleScroll = () => {
-      if (isScrolling || !sectionRef.current) return;
+      if (!sectionRef.current) return;
 
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          const now = Date.now();
-          const timeDelta = now - lastScrollTime.current;
-          
-          // Throttle rapid scroll events
-          if (timeDelta < 100) {
-            ticking = false;
-            return;
-          }
-          
-          const sectionTop = sectionRef.current!.offsetTop;
-          const sectionHeight = sectionRef.current!.offsetHeight;
-          const scrollPosition = window.scrollY + window.innerHeight / 3;
-          
-          // Check if we're in the interactive section bounds
-          const interactiveSectionStart = sectionTop + (sectionHeight * 0.2);
-          const interactiveSectionEnd = sectionTop + (sectionHeight * 0.8);
-          
-          if (scrollPosition >= interactiveSectionStart && scrollPosition <= interactiveSectionEnd) {
-            const relativePosition = scrollPosition - interactiveSectionStart;
-            const interactiveHeight = interactiveSectionEnd - interactiveSectionStart;
-            const progress = relativePosition / interactiveHeight;
-            const newStep = Math.min(Math.max(Math.floor(progress * steps.length), 0), steps.length - 1);
-            
-            if (newStep !== activeStep) {
-              setActiveStep(newStep);
-            }
-          }
-          
-          lastScrollTime.current = now;
-          ticking = false;
-        });
-        ticking = true;
+      const sectionTop = sectionRef.current.offsetTop;
+      const sectionHeight = sectionRef.current.offsetHeight;
+      const scrollPosition = window.scrollY + window.innerHeight / 2;
+      
+      // Define tighter bounds for the interactive section
+      const sectionStart = sectionTop + (sectionHeight * 0.3);
+      const sectionEnd = sectionTop + (sectionHeight * 0.7);
+      
+      const wasInSection = isInSection;
+      const nowInSection = scrollPosition >= sectionStart && scrollPosition <= sectionEnd;
+      
+      if (nowInSection !== wasInSection) {
+        setIsInSection(nowInSection);
+        setIsLocked(nowInSection);
+      }
+      
+      // Only update step when not locked by wheel/touch interactions
+      if (nowInSection && !isLocked) {
+        const progress = (scrollPosition - sectionStart) / (sectionEnd - sectionStart);
+        const newStep = Math.min(Math.max(Math.floor(progress * steps.length), 0), steps.length - 1);
+        
+        if (newStep !== activeStep && !isAnimatingRef.current) {
+          setActiveStep(newStep);
+        }
       }
     };
 
     const handleWheel = (e: WheelEvent) => {
-      if (!sectionRef.current) return;
+      if (!isInSection || isAnimatingRef.current) return;
       
-      const sectionTop = sectionRef.current.offsetTop;
-      const sectionHeight = sectionRef.current.offsetHeight;
-      const scrollPosition = window.scrollY + window.innerHeight / 3;
+      e.preventDefault();
+      e.stopPropagation();
       
-      // Check if we're in the stepper section
-      const interactiveSectionStart = sectionTop + (sectionHeight * 0.2);
-      const interactiveSectionEnd = sectionTop + (sectionHeight * 0.8);
+      const now = Date.now();
+      const timeSinceLastWheel = now - lastWheelTime.current;
       
-      if (scrollPosition >= interactiveSectionStart && scrollPosition <= interactiveSectionEnd) {
-        e.preventDefault();
+      // Reset accumulator if too much time has passed
+      if (timeSinceLastWheel > 150) {
+        wheelAccumulator.current = 0;
+      }
+      
+      // Accumulate wheel delta for more stable detection
+      wheelAccumulator.current += e.deltaY;
+      lastWheelTime.current = now;
+      
+      // Only trigger step change when accumulator crosses threshold
+      const threshold = 100;
+      if (Math.abs(wheelAccumulator.current) >= threshold) {
+        const direction = wheelAccumulator.current > 0 ? 1 : -1;
+        changeStep(direction);
+        wheelAccumulator.current = 0; // Reset after triggering
         
-        const now = Date.now();
-        if (now - lastScrollTime.current < 300) return; // Debounce rapid wheel events
-        
-        const direction = e.deltaY > 0 ? 1 : -1;
-        let newStep = activeStep;
-        
-        if (direction > 0 && activeStep < steps.length - 1) {
-          newStep = activeStep + 1;
-        } else if (direction < 0 && activeStep > 0) {
-          newStep = activeStep - 1;
-        }
-        
-        if (newStep !== activeStep) {
-          setActiveStep(newStep);
-          scrollToStep(newStep);
-          lastScrollTime.current = now;
-        }
+        // Lock interactions briefly to prevent rapid firing
+        setIsLocked(true);
+        setTimeout(() => setIsLocked(false), 500);
       }
     };
 
-    // Touch handling for mobile
+    // Touch handling with improved gesture detection
     let touchStartY = 0;
     let touchStartTime = 0;
+    let touchMoved = false;
 
     const handleTouchStart = (e: TouchEvent) => {
+      if (!isInSection) return;
       touchStartY = e.touches[0].clientY;
       touchStartTime = Date.now();
+      touchMoved = false;
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (!sectionRef.current) return;
+      if (!isInSection) return;
+      touchMoved = true;
       
-      const sectionTop = sectionRef.current.offsetTop;
-      const sectionHeight = sectionRef.current.offsetHeight;
-      const scrollPosition = window.scrollY + window.innerHeight / 3;
+      // Prevent page scrolling during touch interaction in section
+      e.preventDefault();
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (!isInSection || !touchMoved || isAnimatingRef.current) return;
       
-      const interactiveSectionStart = sectionTop + (sectionHeight * 0.2);
-      const interactiveSectionEnd = sectionTop + (sectionHeight * 0.8);
+      const touchEndY = e.changedTouches[0].clientY;
+      const touchDelta = touchStartY - touchEndY;
+      const timeDelta = Date.now() - touchStartTime;
+      const velocity = Math.abs(touchDelta) / timeDelta;
       
-      if (scrollPosition >= interactiveSectionStart && scrollPosition <= interactiveSectionEnd) {
-        const touchCurrentY = e.touches[0].clientY;
-        const touchDelta = touchStartY - touchCurrentY;
-        const timeDelta = Date.now() - touchStartTime;
+      // More sensitive thresholds for better responsiveness
+      if (Math.abs(touchDelta) > 30 && velocity > 0.3) {
+        const direction = touchDelta > 0 ? 1 : -1;
+        changeStep(direction);
         
-        // Only respond to significant, deliberate swipes
-        if (Math.abs(touchDelta) > 50 && timeDelta > 100) {
-          e.preventDefault();
-          
-          const direction = touchDelta > 0 ? 1 : -1;
-          let newStep = activeStep;
-          
-          if (direction > 0 && activeStep < steps.length - 1) {
-            newStep = activeStep + 1;
-          } else if (direction < 0 && activeStep > 0) {
-            newStep = activeStep - 1;
-          }
-          
-          if (newStep !== activeStep) {
-            setActiveStep(newStep);
-            scrollToStep(newStep);
-          }
-          
-          touchStartY = touchCurrentY;
-          touchStartTime = Date.now();
-        }
+        // Lock interactions briefly
+        setIsLocked(true);
+        setTimeout(() => setIsLocked(false), 500);
       }
     };
 
+    // Keyboard navigation
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isInSection || isAnimatingRef.current) return;
+      
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        changeStep(1);
+      } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        changeStep(-1);
+      }
+    };
+
+    // Use passive for scroll, but non-passive for wheel to allow preventDefault
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('wheel', handleWheel, { passive: false });
     window.addEventListener('touchstart', handleTouchStart, { passive: true });
     window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    window.addEventListener('keydown', handleKeyDown);
 
     // Initial check
     handleScroll();
@@ -294,11 +289,10 @@ export default function Features() {
       window.removeEventListener('wheel', handleWheel);
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchmove', handleTouchMove);
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [activeStep, isScrolling, steps.length]);
+  }, [activeStep, isInSection, isLocked, steps.length]);
 
   return (
     <section ref={sectionRef} className="py-20 bg-white" id="features">
@@ -424,13 +418,58 @@ export default function Features() {
             
             {/* Scroll Hint */}
             <div className="mt-8 text-center">
-              <p className="text-sm text-slate-500 mb-2">Use scroll wheel or swipe to navigate</p>
+              <p className={`text-sm mb-2 transition-colors duration-300 ${
+                isInSection 
+                  ? isLocked 
+                    ? 'text-orange-500' 
+                    : 'text-primary'
+                  : 'text-slate-500'
+              }`}>
+                {isInSection 
+                  ? isLocked 
+                    ? 'Step transitioning...'
+                    : 'Use scroll wheel or swipe to navigate'
+                  : 'Scroll here to explore features'
+                }
+              </p>
               <div className="flex items-center justify-center space-x-2">
-                <div className="w-4 h-6 border-2 border-slate-300 rounded-full flex justify-center">
-                  <div className="w-1 h-2 bg-slate-400 rounded-full mt-1 animate-bounce" />
+                <div className={`w-4 h-6 border-2 rounded-full flex justify-center transition-all duration-300 ${
+                  isInSection 
+                    ? isLocked
+                      ? 'border-orange-400 bg-orange-50'
+                      : 'border-primary bg-primary/5'
+                    : 'border-slate-300'
+                }`}>
+                  <div className={`w-1 h-2 rounded-full mt-1 transition-all duration-300 ${
+                    isInSection 
+                      ? isLocked
+                        ? 'bg-orange-400 animate-pulse'
+                        : 'bg-primary animate-bounce'
+                      : 'bg-slate-400 animate-bounce'
+                  }`} />
                 </div>
-                <span className="text-xs text-slate-400">Scroll</span>
+                <span className={`text-xs transition-colors duration-300 ${
+                  isInSection 
+                    ? isLocked 
+                      ? 'text-orange-400'
+                      : 'text-primary'
+                    : 'text-slate-400'
+                }`}>
+                  {isInSection 
+                    ? isLocked 
+                      ? 'Locked'
+                      : 'Interactive'
+                    : 'Scroll'
+                  }
+                </span>
               </div>
+              
+              {/* Keyboard hint */}
+              {isInSection && (
+                <div className="mt-3 text-xs text-slate-400">
+                  Or use arrow keys ↑↓
+                </div>
+              )}
             </div>
           </div>
         </div>
