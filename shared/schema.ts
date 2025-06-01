@@ -45,17 +45,19 @@ export const otpVerifications = pgTable("otp_verifications", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const projects = pgTable("projects", {
+export const posts = pgTable("posts", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
-  title: text("title").notNull(),
-  description: text("description").notNull(),
-  images: text("images").array(), // array of image URLs
-  projectType: text("project_type"), // 'residential', 'commercial', 'industrial', etc.
-  completionDate: timestamp("completion_date"),
-  budgetRange: text("budget_range"), // '$1k-5k', '$5k-10k', etc.
-  location: text("location"),
+  content: text("content"), // text content of the post
+  postType: text("post_type").notNull(), // 'text' or 'media'
+  mediaUrls: text("media_urls").array(), // array of image/video URLs for media posts
+  mediaType: text("media_type"), // 'image' or 'video' (only for media posts)
+  location: text("location"), // optional location tag
+  tags: text("tags").array(), // hashtags or tags
+  likesCount: integer("likes_count").default(0).notNull(),
+  commentsCount: integer("comments_count").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const jobOrders = pgTable("job_orders", {
@@ -95,9 +97,12 @@ export const insertOtpVerificationSchema = createInsertSchema(otpVerifications).
   createdAt: true,
 });
 
-export const insertProjectSchema = createInsertSchema(projects).omit({
+export const insertPostSchema = createInsertSchema(posts).omit({
   id: true,
+  likesCount: true,
+  commentsCount: true,
   createdAt: true,
+  updatedAt: true,
 });
 
 export const insertJobOrderSchema = createInsertSchema(jobOrders).omit({
@@ -114,7 +119,7 @@ export type NewsletterSubscription = typeof newsletterSubscriptions.$inferSelect
 export type InsertNewsletterSubscription = z.infer<typeof insertNewsletterSubscriptionSchema>;
 export type OtpVerification = typeof otpVerifications.$inferSelect;
 export type InsertOtpVerification = z.infer<typeof insertOtpVerificationSchema>;
-export type Project = typeof projects.$inferSelect;
-export type InsertProject = z.infer<typeof insertProjectSchema>;
+export type Post = typeof posts.$inferSelect;
+export type InsertPost = z.infer<typeof insertPostSchema>;
 export type JobOrder = typeof jobOrders.$inferSelect;
 export type InsertJobOrder = z.infer<typeof insertJobOrderSchema>;
