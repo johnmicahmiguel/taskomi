@@ -3,6 +3,7 @@ import {
   contactSubmissions,
   newsletterSubscriptions,
   otpVerifications,
+  posts,
   type User, 
   type InsertUser,
   type ContactSubmission,
@@ -10,10 +11,12 @@ import {
   type NewsletterSubscription,
   type InsertNewsletterSubscription,
   type OtpVerification,
-  type InsertOtpVerification
+  type InsertOtpVerification,
+  type Post,
+  type InsertPost
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gt, or, ilike, inArray } from "drizzle-orm";
+import { eq, and, gt, or, ilike, inArray, desc } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -29,6 +32,10 @@ export interface IStorage {
   getBusinesses(filters?: { search?: string; businessType?: string; location?: string; tags?: string[] }): Promise<User[]>;
   getContractors(filters?: { search?: string; skills?: string[]; location?: string; tags?: string[] }): Promise<User[]>;
   getUserProfile(id: number): Promise<User | undefined>;
+  createPost(post: InsertPost): Promise<Post>;
+  getPosts(filters?: { userId?: number; postType?: string; tags?: string[] }): Promise<Post[]>;
+  getPostsByUser(userId: number): Promise<Post[]>;
+  getPostById(id: number): Promise<Post | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -173,6 +180,93 @@ export class DatabaseStorage implements IStorage {
   async getUserProfile(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
+  }
+
+  async createPost(insertPost: InsertPost): Promise<Post> {
+    const [post] = await db
+      .insert(posts)
+      .values(insertPost)
+      .returning();
+    return post;
+  }
+
+  async getPosts(filters?: { userId?: number; postType?: string; tags?: string[] }): Promise<any[]> {
+    const conditions = [];
+    
+    if (filters?.userId) {
+      conditions.push(eq(posts.userId, filters.userId));
+    }
+    
+    if (filters?.postType) {
+      conditions.push(eq(posts.postType, filters.postType));
+    }
+    
+    if (filters?.tags && filters.tags.length > 0) {
+      conditions.push(
+        or(...filters.tags.map(tag => 
+          ilike(posts.tags, `%${tag}%`)
+        ))!
+      );
+    }
+
+    const baseQuery = db.select({
+      id: posts.id,
+      userId: posts.userId,
+      content: posts.content,
+      postType: posts.postType,
+      mediaUrls: posts.mediaUrls,
+      mediaType: posts.mediaType,
+      location: posts.location,
+      tags: posts.tags,
+      likesCount: posts.likesCount,
+      commentsCount: posts.commentsCount,
+      createdAt: posts.createdAt,
+      updatedAt: posts.updatedAt,
+      user: {
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        userType: users.userType,
+        companyName: users.companyName,
+        businessType: users.businessType
+      }
+    }).from(posts).innerJoin(users, eq(posts.userId, users.id));
+
+    if (conditions.length > 0) {
+      return await baseQuery.where(and(...conditions)).orderBy(desc(posts.createdAt));
+    }
+    
+    return await baseQuery.orderBy(desc(posts.createdAt));
+  }
+
+  async getPostsByUser(userId: number): Promise<any[]> {
+    return this.getPosts({ userId });
+  }
+
+  async getPostById(id: number): Promise<any | undefined> {
+    const [post] = await db.select({
+      id: posts.id,
+      userId: posts.userId,
+      content: posts.content,
+      postType: posts.postType,
+      mediaUrls: posts.mediaUrls,
+      mediaType: posts.mediaType,
+      location: posts.location,
+      tags: posts.tags,
+      likesCount: posts.likesCount,
+      commentsCount: posts.commentsCount,
+      createdAt: posts.createdAt,
+      updatedAt: posts.updatedAt,
+      user: {
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        userType: users.userType,
+        companyName: users.companyName,
+        businessType: users.businessType
+      }
+    }).from(posts).innerJoin(users, eq(posts.userId, users.id)).where(eq(posts.id, id));
+    return post || undefined;
   }
 }
 
