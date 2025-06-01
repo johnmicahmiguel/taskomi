@@ -81,11 +81,7 @@ export default function Feed() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
-      setIsCreatingPost(false);
-      setContent("");
-      setLocation("");
-      setTags("");
-      setMediaUrls("");
+      clearForm();
       toast({
         title: "Success",
         description: "Post created successfully!",

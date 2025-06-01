@@ -1,12 +1,32 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import session from "express-session";
 import { storage } from "./storage";
 import { insertContactSubmissionSchema, insertNewsletterSubscriptionSchema, insertUserSchema, insertPostSchema } from "@shared/schema";
 import { z } from "zod";
 import { sendEmail, generateOTP, getOTPEmailTemplate } from "./email";
 import bcrypt from "bcryptjs";
 
+// Extend the session data interface
+declare module 'express-session' {
+  interface SessionData {
+    userId?: number;
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Configure session middleware
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false, // Set to true in production with HTTPS
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+  }));
+
   // Contact form submission
   app.post("/api/contact", async (req, res) => {
     try {
@@ -102,6 +122,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!isPasswordValid) {
         return res.status(401).json({ message: "Invalid email or password" });
       }
+
+      // Set session
+      req.session.userId = user.id;
 
       // Return user without password
       const { password: _, ...userResponse } = user;
