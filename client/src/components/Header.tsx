@@ -27,12 +27,6 @@ export default function Header() {
           
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
-              <Link href="/businesses" className="text-slate-600 hover:text-primary font-medium transition-colors">
-                Find Businesses
-              </Link>
-              <Link href="/contractors" className="text-slate-600 hover:text-primary font-medium transition-colors">
-                Find Contractors
-              </Link>
               <button 
                 onClick={() => scrollToSection("features")}
                 className="text-slate-600 hover:text-primary font-medium transition-colors"
@@ -50,6 +44,12 @@ export default function Header() {
                 className="text-slate-600 hover:text-primary font-medium transition-colors"
               >
                 Pricing
+              </button>
+              <button 
+                onClick={() => scrollToSection("testimonials")}
+                className="text-slate-600 hover:text-primary font-medium transition-colors"
+              >
+                Testimonials
               </button>
             </div>
           </div>
@@ -73,20 +73,6 @@ export default function Header() {
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px]">
                 <div className="flex flex-col space-y-4 pt-8">
-                  <Link 
-                    href="/businesses"
-                    className="text-left text-slate-600 hover:text-primary font-medium p-2"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Find Businesses
-                  </Link>
-                  <Link 
-                    href="/contractors"
-                    className="text-left text-slate-600 hover:text-primary font-medium p-2"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Find Contractors
-                  </Link>
                   <button 
                     onClick={() => scrollToSection("features")}
                     className="text-left text-slate-600 hover:text-primary font-medium p-2"
@@ -104,6 +90,12 @@ export default function Header() {
                     className="text-left text-slate-600 hover:text-primary font-medium p-2"
                   >
                     Pricing
+                  </button>
+                  <button 
+                    onClick={() => scrollToSection("testimonials")}
+                    className="text-left text-slate-600 hover:text-primary font-medium p-2"
+                  >
+                    Testimonials
                   </button>
                   <div className="pt-4 border-t space-y-2">
                     <Button variant="ghost" className="w-full justify-start" asChild>

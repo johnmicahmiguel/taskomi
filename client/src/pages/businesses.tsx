@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import AuthGuard from "@/components/AuthGuard";
 import type { User } from "@shared/schema";
 
 const businessTypes = [
@@ -37,7 +38,7 @@ export default function Businesses() {
     queryFn: async () => {
       const params = new URLSearchParams();
       if (search) params.append("search", search);
-      if (businessType) params.append("businessType", businessType);
+      if (businessType && businessType !== "all") params.append("businessType", businessType);
       if (location) params.append("location", location);
       
       const response = await fetch(`/api/businesses?${params}`);
@@ -50,7 +51,7 @@ export default function Businesses() {
 
   const clearFilters = () => {
     setSearch("");
-    setBusinessType("");
+    setBusinessType("all");
     setLocation("");
   };
 
@@ -136,7 +137,8 @@ export default function Businesses() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <AuthGuard>
+      <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -184,7 +186,7 @@ export default function Businesses() {
                 <SelectValue placeholder="Business Type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Types</SelectItem>
+                <SelectItem value="all">All Types</SelectItem>
                 {businessTypes.map((type) => (
                   <SelectItem key={type.value} value={type.value}>
                     {type.label}
@@ -254,5 +256,6 @@ export default function Businesses() {
         )}
       </div>
     </div>
+    </AuthGuard>
   );
 }

@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Building, Wrench, User, Mail, Phone, MapPin, LogOut, Shield, ShieldCheck, Clock } from "lucide-react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -141,6 +141,23 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <h1 className="text-2xl font-bold text-primary">ConnectPro</h1>
+            
+            {/* Navigation Links */}
+            <div className="hidden md:flex items-center space-x-6">
+              <Button variant="ghost" asChild className="text-slate-600 hover:text-primary">
+                <Link href="/businesses">
+                  <Building className="mr-2 h-4 w-4" />
+                  Find Businesses
+                </Link>
+              </Button>
+              <Button variant="ghost" asChild className="text-slate-600 hover:text-primary">
+                <Link href="/contractors">
+                  <Wrench className="mr-2 h-4 w-4" />
+                  Find Contractors
+                </Link>
+              </Button>
+            </div>
+            
             <Button 
               variant="ghost" 
               onClick={handleLogout}
@@ -149,6 +166,24 @@ export default function Dashboard() {
               <LogOut className="mr-2 h-4 w-4" />
               Logout
             </Button>
+          </div>
+          
+          {/* Mobile Navigation */}
+          <div className="md:hidden pb-4">
+            <div className="flex space-x-2">
+              <Button variant="ghost" size="sm" asChild className="flex-1 text-slate-600 hover:text-primary">
+                <Link href="/businesses">
+                  <Building className="mr-2 h-4 w-4" />
+                  Businesses
+                </Link>
+              </Button>
+              <Button variant="ghost" size="sm" asChild className="flex-1 text-slate-600 hover:text-primary">
+                <Link href="/contractors">
+                  <Wrench className="mr-2 h-4 w-4" />
+                  Contractors
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
       </header>
