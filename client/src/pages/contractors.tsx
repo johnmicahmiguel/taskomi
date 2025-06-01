@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import AuthGuard from "@/components/AuthGuard";
 import type { User } from "@shared/schema";
 
 const commonSkills = [
@@ -167,7 +168,8 @@ export default function Contractors() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <AuthGuard>
+      <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -288,6 +290,7 @@ export default function Contractors() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </AuthGuard>
   );
 }

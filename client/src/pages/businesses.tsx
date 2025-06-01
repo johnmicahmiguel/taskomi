@@ -255,7 +255,7 @@ export default function Businesses() {
           </div>
         )}
       </div>
-    </div>
+      </div>
     </AuthGuard>
   );
 }
