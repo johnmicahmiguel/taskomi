@@ -200,6 +200,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(401).json({ message: "Not authenticated" });
   });
 
+  // Get businesses directory with filtering
+  app.get("/api/businesses", async (req, res) => {
+    try {
+      const { search, businessType, location, tags } = req.query;
+      
+      const filters: any = {};
+      if (search) filters.search = search as string;
+      if (businessType) filters.businessType = businessType as string;
+      if (location) filters.location = location as string;
+      if (tags) filters.tags = Array.isArray(tags) ? tags as string[] : [tags as string];
+      
+      const businesses = await storage.getBusinesses(filters);
+      
+      // Remove passwords from response
+      const businessesResponse = businesses.map(({ password, ...business }) => business);
+      
+      res.json({ success: true, businesses: businessesResponse });
+    } catch (error) {
+      console.error("Get businesses error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get contractors directory with filtering
+  app.get("/api/contractors", async (req, res) => {
+    try {
+      const { search, skills, location, tags } = req.query;
+      
+      const filters: any = {};
+      if (search) filters.search = search as string;
+      if (skills) filters.skills = Array.isArray(skills) ? skills as string[] : [skills as string];
+      if (location) filters.location = location as string;
+      if (tags) filters.tags = Array.isArray(tags) ? tags as string[] : [tags as string];
+      
+      const contractors = await storage.getContractors(filters);
+      
+      // Remove passwords from response
+      const contractorsResponse = contractors.map(({ password, ...contractor }) => contractor);
+      
+      res.json({ success: true, contractors: contractorsResponse });
+    } catch (error) {
+      console.error("Get contractors error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

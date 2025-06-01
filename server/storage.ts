@@ -13,7 +13,7 @@ import {
   type InsertOtpVerification
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gt } from "drizzle-orm";
+import { eq, and, gt, or, ilike, inArray } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -26,6 +26,8 @@ export interface IStorage {
   createOtpVerification(otp: InsertOtpVerification): Promise<OtpVerification>;
   getValidOtp(email: string, otp: string): Promise<OtpVerification | undefined>;
   markOtpAsUsed(id: number): Promise<void>;
+  getBusinesses(filters?: { search?: string; businessType?: string; location?: string; tags?: string[] }): Promise<User[]>;
+  getContractors(filters?: { search?: string; skills?: string[]; location?: string; tags?: string[] }): Promise<User[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -108,6 +110,63 @@ export class DatabaseStorage implements IStorage {
       .update(otpVerifications)
       .set({ isUsed: true })
       .where(eq(otpVerifications.id, id));
+  }
+
+  async getBusinesses(filters?: { search?: string; businessType?: string; location?: string; tags?: string[] }): Promise<User[]> {
+    let query = db.select().from(users).where(eq(users.userType, "business"));
+    
+    if (filters) {
+      const conditions = [eq(users.userType, "business")];
+      
+      if (filters.search) {
+        conditions.push(
+          or(
+            ilike(users.firstName, `%${filters.search}%`),
+            ilike(users.lastName, `%${filters.search}%`),
+            ilike(users.companyName, `%${filters.search}%`),
+            ilike(users.bio, `%${filters.search}%`)
+          )!
+        );
+      }
+      
+      if (filters.businessType) {
+        conditions.push(eq(users.businessType, filters.businessType));
+      }
+      
+      if (filters.location) {
+        conditions.push(ilike(users.location, `%${filters.location}%`));
+      }
+      
+      query = db.select().from(users).where(and(...conditions));
+    }
+    
+    return await query;
+  }
+
+  async getContractors(filters?: { search?: string; skills?: string[]; location?: string; tags?: string[] }): Promise<User[]> {
+    let query = db.select().from(users).where(eq(users.userType, "contractor"));
+    
+    if (filters) {
+      const conditions = [eq(users.userType, "contractor")];
+      
+      if (filters.search) {
+        conditions.push(
+          or(
+            ilike(users.firstName, `%${filters.search}%`),
+            ilike(users.lastName, `%${filters.search}%`),
+            ilike(users.bio, `%${filters.search}%`)
+          )!
+        );
+      }
+      
+      if (filters.location) {
+        conditions.push(ilike(users.location, `%${filters.location}%`));
+      }
+      
+      query = db.select().from(users).where(and(...conditions));
+    }
+    
+    return await query;
   }
 }
 

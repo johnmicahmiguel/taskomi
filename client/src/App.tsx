@@ -7,6 +7,8 @@ import Landing from "@/pages/landing";
 import Signup from "@/pages/signup";
 import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
+import Businesses from "@/pages/businesses";
+import Contractors from "@/pages/contractors";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -16,6 +18,8 @@ function Router() {
       <Route path="/signup" component={Signup} />
       <Route path="/login" component={Login} />
       <Route path="/dashboard" component={Dashboard} />
+      <Route path="/businesses" component={Businesses} />
+      <Route path="/contractors" component={Contractors} />
       <Route component={NotFound} />
     </Switch>
   );
