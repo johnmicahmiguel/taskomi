@@ -33,9 +33,9 @@ export interface IStorage {
   getContractors(filters?: { search?: string; skills?: string[]; location?: string; tags?: string[] }): Promise<User[]>;
   getUserProfile(id: number): Promise<User | undefined>;
   createPost(post: InsertPost): Promise<Post>;
-  getPosts(filters?: { userId?: number; postType?: string; tags?: string[] }): Promise<Post[]>;
-  getPostsByUser(userId: number): Promise<Post[]>;
-  getPostById(id: number): Promise<Post | undefined>;
+  getPosts(filters?: { userId?: number; postType?: string; tags?: string[] }): Promise<any[]>;
+  getPostsByUser(userId: number): Promise<any[]>;
+  getPostById(id: number): Promise<any | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {

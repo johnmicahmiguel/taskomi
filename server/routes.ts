@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertContactSubmissionSchema, insertNewsletterSubscriptionSchema, insertUserSchema } from "@shared/schema";
+import { insertContactSubmissionSchema, insertNewsletterSubscriptionSchema, insertUserSchema, insertPostSchema } from "@shared/schema";
 import { z } from "zod";
 import { sendEmail, generateOTP, getOTPEmailTemplate } from "./email";
 import bcrypt from "bcryptjs";
@@ -264,6 +264,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true, user: userResponse });
     } catch (error) {
       console.error("Get user profile error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Create a new post
+  app.post("/api/posts", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const validatedData = insertPostSchema.parse({
+        ...req.body,
+        userId: req.session.userId
+      });
+      
+      const post = await storage.createPost(validatedData);
+      res.json({ success: true, post });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Create post error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get posts feed
+  app.get("/api/posts", async (req, res) => {
+    try {
+      const { userId, postType, tags } = req.query;
+      
+      const filters: any = {};
+      if (userId) filters.userId = parseInt(userId as string);
+      if (postType) filters.postType = postType as string;
+      if (tags) filters.tags = Array.isArray(tags) ? tags as string[] : [tags as string];
+      
+      const posts = await storage.getPosts(filters);
+      res.json({ success: true, posts });
+    } catch (error) {
+      console.error("Get posts error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get posts by user
+  app.get("/api/posts/user/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+
+      const posts = await storage.getPostsByUser(userId);
+      res.json({ success: true, posts });
+    } catch (error) {
+      console.error("Get user posts error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get single post
+  app.get("/api/posts/:id", async (req, res) => {
+    try {
+      const postId = parseInt(req.params.id);
+      if (isNaN(postId)) {
+        return res.status(400).json({ message: "Invalid post ID" });
+      }
+
+      const post = await storage.getPostById(postId);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+
+      res.json({ success: true, post });
+    } catch (error) {
+      console.error("Get post error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

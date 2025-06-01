@@ -10,6 +10,7 @@ import Dashboard from "@/pages/dashboard";
 import Businesses from "@/pages/businesses";
 import Contractors from "@/pages/contractors";
 import Profile from "@/pages/profile";
+import Feed from "@/pages/feed";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/signup" component={Signup} />
       <Route path="/login" component={Login} />
       <Route path="/dashboard" component={Dashboard} />
+      <Route path="/feed" component={Feed} />
       <Route path="/businesses" component={Businesses} />
       <Route path="/contractors" component={Contractors} />
       <Route path="/profile/:userType/:id" component={Profile} />
