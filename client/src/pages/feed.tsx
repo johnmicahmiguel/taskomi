@@ -4,6 +4,7 @@ import { Link } from "wouter";
 import AuthGuard from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +13,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Heart, MessageCircle, Share, Image, Video, MapPin, Hash, ArrowLeft, MessageSquare, Building, Wrench, User, Plus } from "lucide-react";
+import { Heart, MessageCircle, Share, Image, Video, MapPin, Hash, Home, MessageSquare, Building, Wrench, User, Plus } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { insertPostSchema } from "@shared/schema";
 import { z } from "zod";
@@ -44,7 +45,6 @@ interface Post {
 
 export default function Feed() {
   const [activeTab, setActiveTab] = useState("my-feed");
-  const [isCreatingPost, setIsCreatingPost] = useState(false);
   const [postType, setPostType] = useState<"text" | "media">("text");
   const [content, setContent] = useState("");
   const [location, setLocation] = useState("");
@@ -225,121 +225,7 @@ export default function Feed() {
     </Card>
   );
 
-  const CreatePostCard = () => (
-    <Card className="mb-6 border-gray-200 dark:border-gray-700">
-      <CardContent className="p-4">
-        {!isCreatingPost ? (
-          <Button 
-            onClick={() => setIsCreatingPost(true)}
-            className="w-full justify-start text-left bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            What's on your mind?
-          </Button>
-        ) : (
-          <div className="space-y-4">
-            <Tabs value={postType} onValueChange={(value) => setPostType(value as "text" | "media")}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="text" className="flex items-center space-x-2">
-                  <span>Text</span>
-                </TabsTrigger>
-                <TabsTrigger value="media" className="flex items-center space-x-2">
-                  <Image className="h-4 w-4" />
-                  <span>Media</span>
-                </TabsTrigger>
-              </TabsList>
 
-              <TabsContent value="text" className="space-y-4">
-                <Textarea
-                  placeholder="What's happening?"
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  className="min-h-[100px]"
-                />
-              </TabsContent>
-
-              <TabsContent value="media" className="space-y-4">
-                <Textarea
-                  placeholder="Add a caption... (optional)"
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  className="min-h-[80px]"
-                />
-                
-                <div className="space-y-2">
-                  <Label htmlFor="mediaType">Media Type</Label>
-                  <Tabs value={mediaType} onValueChange={(value) => setMediaType(value as "image" | "video")}>
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="image" className="flex items-center space-x-2">
-                        <Image className="h-4 w-4" />
-                        <span>Image</span>
-                      </TabsTrigger>
-                      <TabsTrigger value="video" className="flex items-center space-x-2">
-                        <Video className="h-4 w-4" />
-                        <span>Video</span>
-                      </TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="mediaUrls">Media URLs (comma separated)</Label>
-                  <Input
-                    id="mediaUrls"
-                    placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
-                    value={mediaUrls}
-                    onChange={(e) => setMediaUrls(e.target.value)}
-                  />
-                </div>
-              </TabsContent>
-            </Tabs>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="location">Location (optional)</Label>
-                <Input
-                  id="location"
-                  placeholder="Add location..."
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="tags">Tags (optional)</Label>
-                <Input
-                  id="tags"
-                  placeholder="tag1, tag2, tag3"
-                  value={tags}
-                  onChange={(e) => setTags(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="flex space-x-2">
-              <Button 
-                onClick={handleCreatePost}
-                disabled={createPostMutation.isPending}
-                className="flex-1"
-              >
-                {createPostMutation.isPending ? "Posting..." : "Post"}
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setIsCreatingPost(false);
-                  setContent("");
-                  setLocation("");
-                  setTags("");
-                  setMediaUrls("");
-                }}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
 
   return (
     <AuthGuard>
@@ -361,8 +247,8 @@ export default function Feed() {
                 className="w-full justify-start text-left hover:bg-gray-100 dark:hover:bg-gray-700"
               >
                 <Link href="/dashboard">
-                  <ArrowLeft className="mr-3 h-5 w-5" />
-                  Back to Dashboard
+                  <Home className="mr-3 h-5 w-5" />
+                  Dashboard
                 </Link>
               </Button>
 
@@ -408,14 +294,98 @@ export default function Feed() {
               </Button>
             </nav>
 
-            {/* Post Button */}
-            <Button 
-              onClick={() => setIsCreatingPost(!isCreatingPost)}
-              className="w-full"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              New Post
-            </Button>
+            {/* Post Button - Dialog Trigger */}
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="w-full">
+                  <Plus className="mr-2 h-4 w-4" />
+                  New Post
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <DialogHeader>
+                  <DialogTitle>Create New Post</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="post-content">What's happening?</Label>
+                    <Textarea
+                      id="post-content"
+                      placeholder="Share your thoughts..."
+                      value={content}
+                      onChange={(e) => setContent(e.target.value)}
+                      className="mt-1 min-h-[100px]"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="post-location">Location (optional)</Label>
+                      <Input
+                        id="post-location"
+                        placeholder="Add location"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="post-tags">Tags (optional)</Label>
+                      <Input
+                        id="post-tags"
+                        placeholder="Add tags (comma separated)"
+                        value={tags}
+                        onChange={(e) => setTags(e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+
+                  {postType === "media" && (
+                    <div>
+                      <Label htmlFor="media-urls">Media URLs</Label>
+                      <Input
+                        id="media-urls"
+                        placeholder="Enter media URLs (comma separated)"
+                        value={mediaUrls}
+                        onChange={(e) => setMediaUrls(e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center">
+                    <div className="flex space-x-2">
+                      <Button
+                        type="button"
+                        variant={postType === "text" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setPostType("text")}
+                      >
+                        Text
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={postType === "media" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setPostType("media")}
+                      >
+                        Media
+                      </Button>
+                    </div>
+                    
+                    <div className="flex space-x-2">
+                      <Button 
+                        onClick={handleCreatePost}
+                        disabled={createPostMutation.isPending || !content.trim()}
+                      >
+                        {createPostMutation.isPending ? "Posting..." : "Post"}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
@@ -433,7 +403,6 @@ export default function Feed() {
             </TabsList>
 
             <TabsContent value="my-feed" className="space-y-4">
-              <CreatePostCard />
               
               {isLoading ? (
                 <div className="space-y-4">
@@ -466,7 +435,6 @@ export default function Feed() {
             </TabsContent>
 
             <TabsContent value="for-you" className="space-y-4">
-              <CreatePostCard />
               <div className="text-center py-12">
                 <p className="text-gray-500 dark:text-gray-400 mb-4">For You feed coming soon</p>
                 <p className="text-sm text-gray-400 dark:text-gray-500">We're working on personalized recommendations</p>
