@@ -96,6 +96,14 @@ export default function Feed() {
     },
   });
 
+  const clearForm = () => {
+    setContent("");
+    setLocation("");
+    setTags("");
+    setMediaUrls("");
+    setPostType("text");
+  };
+
   const handleCreatePost = () => {
     if (!content.trim() && postType === "text") {
       toast({
