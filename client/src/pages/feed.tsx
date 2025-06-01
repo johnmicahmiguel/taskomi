@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "wouter";
+import AuthGuard from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +12,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Heart, MessageCircle, Share, Image, Video, MapPin, Hash } from "lucide-react";
+import { Heart, MessageCircle, Share, Image, Video, MapPin, Hash, ArrowLeft, MessageSquare, Building, Wrench, User, Plus } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { insertPostSchema } from "@shared/schema";
 import { z } from "zod";
@@ -340,61 +342,167 @@ export default function Feed() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-2xl mx-auto p-4">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Feed</h1>
-          <p className="text-gray-600 dark:text-gray-400">Stay connected with the community</p>
+    <AuthGuard>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="flex">
+        {/* Side Navigation */}
+        <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 min-h-screen p-4">
+          <div className="space-y-6">
+            {/* Logo/Brand */}
+            <div className="px-2">
+              <h2 className="text-xl font-bold text-primary">ConnectPro</h2>
+            </div>
+
+            {/* Navigation Links */}
+            <nav className="space-y-2">
+              <Button 
+                variant="ghost" 
+                asChild 
+                className="w-full justify-start text-left hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                <Link href="/dashboard">
+                  <ArrowLeft className="mr-3 h-5 w-5" />
+                  Back to Dashboard
+                </Link>
+              </Button>
+
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-left bg-primary/10 text-primary hover:bg-primary/20"
+              >
+                <MessageSquare className="mr-3 h-5 w-5" />
+                Feed
+              </Button>
+
+              <Button 
+                variant="ghost" 
+                asChild 
+                className="w-full justify-start text-left hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                <Link href="/businesses">
+                  <Building className="mr-3 h-5 w-5" />
+                  Find Businesses
+                </Link>
+              </Button>
+
+              <Button 
+                variant="ghost" 
+                asChild 
+                className="w-full justify-start text-left hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                <Link href="/contractors">
+                  <Wrench className="mr-3 h-5 w-5" />
+                  Find Contractors
+                </Link>
+              </Button>
+
+              <Button 
+                variant="ghost" 
+                asChild 
+                className="w-full justify-start text-left hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                <Link href="/profile">
+                  <User className="mr-3 h-5 w-5" />
+                  Profile
+                </Link>
+              </Button>
+            </nav>
+
+            {/* Post Button */}
+            <Button 
+              onClick={() => setIsCreatingPost(!isCreatingPost)}
+              className="w-full"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              New Post
+            </Button>
+          </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="my-feed">My Feed</TabsTrigger>
-            <TabsTrigger value="for-you">For You</TabsTrigger>
-          </TabsList>
+        {/* Main Content */}
+        <div className="flex-1 max-w-2xl mx-auto p-4">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Feed</h1>
+            <p className="text-gray-600 dark:text-gray-400">Stay connected with the community</p>
+          </div>
 
-          <TabsContent value="my-feed" className="space-y-4">
-            <CreatePostCard />
-            
-            {isLoading ? (
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <Card key={i} className="animate-pulse">
-                    <CardContent className="p-4">
-                      <div className="flex space-x-3">
-                        <div className="h-10 w-10 bg-gray-300 rounded-full"></div>
-                        <div className="flex-1 space-y-2">
-                          <div className="h-4 bg-gray-300 rounded w-1/4"></div>
-                          <div className="h-3 bg-gray-300 rounded w-1/6"></div>
-                          <div className="space-y-2">
-                            <div className="h-3 bg-gray-300 rounded"></div>
-                            <div className="h-3 bg-gray-300 rounded w-5/6"></div>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="my-feed">My Feed</TabsTrigger>
+              <TabsTrigger value="for-you">For You</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="my-feed" className="space-y-4">
+              <CreatePostCard />
+              
+              {isLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <Card key={i} className="animate-pulse">
+                      <CardContent className="p-4">
+                        <div className="flex space-x-3">
+                          <div className="h-10 w-10 bg-gray-300 rounded-full"></div>
+                          <div className="flex-1 space-y-2">
+                            <div className="h-4 bg-gray-300 rounded w-1/4"></div>
+                            <div className="h-3 bg-gray-300 rounded w-1/6"></div>
+                            <div className="space-y-2">
+                              <div className="h-3 bg-gray-300 rounded"></div>
+                              <div className="h-3 bg-gray-300 rounded w-5/6"></div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : posts.length > 0 ? (
-              posts.map((post) => <PostCard key={post.id} post={post} />)
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-gray-500 dark:text-gray-400 mb-4">No posts yet</p>
-                <p className="text-sm text-gray-400 dark:text-gray-500">Be the first to share something!</p>
-              </div>
-            )}
-          </TabsContent>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : posts.length > 0 ? (
+                posts.map((post) => <PostCard key={post.id} post={post} />)
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 dark:text-gray-400 mb-4">No posts yet</p>
+                  <p className="text-sm text-gray-400 dark:text-gray-500">Be the first to share something!</p>
+                </div>
+              )}
+            </TabsContent>
 
-          <TabsContent value="for-you" className="space-y-4">
-            <CreatePostCard />
-            <div className="text-center py-12">
-              <p className="text-gray-500 dark:text-gray-400 mb-4">For You feed coming soon</p>
-              <p className="text-sm text-gray-400 dark:text-gray-500">We're working on personalized recommendations</p>
-            </div>
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="for-you" className="space-y-4">
+              <CreatePostCard />
+              <div className="text-center py-12">
+                <p className="text-gray-500 dark:text-gray-400 mb-4">For You feed coming soon</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500">We're working on personalized recommendations</p>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Right Sidebar (Optional - for trending, suggestions, etc.) */}
+        <div className="w-80 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 min-h-screen p-4 hidden lg:block">
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Who to follow</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Suggestions coming soon
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Trending</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Trending topics coming soon
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
-    </div>
+      </div>
+    </AuthGuard>
   );
 }
