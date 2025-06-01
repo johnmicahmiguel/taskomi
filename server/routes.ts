@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertContactSubmissionSchema, insertNewsletterSubscriptionSchema, insertUserSchema } from "@shared/schema";
 import { z } from "zod";
 import { sendEmail, generateOTP, getOTPEmailTemplate } from "./email";
+import bcrypt from "bcryptjs";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Contact form submission
@@ -58,7 +59,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email already registered" });
       }
 
-      const user = await storage.createUser(validatedData);
+      // Hash the password before storing
+      const hashedPassword = await bcrypt.hash(validatedData.password, 10);
+      const userDataWithHashedPassword = {
+        ...validatedData,
+        password: hashedPassword
+      };
+
+      const user = await storage.createUser(userDataWithHashedPassword);
       
       // Return user without password
       const { password, ...userResponse } = user;
@@ -89,8 +97,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid email or password" });
       }
 
-      // Check password (in a real app, you'd hash and compare passwords)
-      if (user.password !== password) {
+      // Compare the provided password with the hashed password
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
         return res.status(401).json({ message: "Invalid email or password" });
       }
 
