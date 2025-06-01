@@ -64,10 +64,18 @@ export default function Feed() {
   // Create post mutation
   const createPostMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest("/api/posts", {
+      const response = await fetch("/api/posts", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(data),
+        credentials: "include",
       });
+      if (!response.ok) {
+        throw new Error("Failed to create post");
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/posts"] });

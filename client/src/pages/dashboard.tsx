@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Building, Wrench, User, Mail, Phone, MapPin, LogOut, Shield, ShieldCheck, Clock } from "lucide-react";
+import { Building, Wrench, User, Mail, Phone, MapPin, LogOut, Shield, ShieldCheck, Clock, MessageSquare } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
@@ -145,6 +145,12 @@ export default function Dashboard() {
             {/* Navigation Links */}
             <div className="hidden md:flex items-center space-x-6">
               <Button variant="ghost" asChild className="text-slate-600 hover:text-primary">
+                <Link href="/feed">
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Feed
+                </Link>
+              </Button>
+              <Button variant="ghost" asChild className="text-slate-600 hover:text-primary">
                 <Link href="/businesses">
                   <Building className="mr-2 h-4 w-4" />
                   Find Businesses
@@ -170,16 +176,22 @@ export default function Dashboard() {
           
           {/* Mobile Navigation */}
           <div className="md:hidden pb-4">
-            <div className="flex space-x-2">
-              <Button variant="ghost" size="sm" asChild className="flex-1 text-slate-600 hover:text-primary">
+            <div className="grid grid-cols-3 gap-2">
+              <Button variant="ghost" size="sm" asChild className="text-slate-600 hover:text-primary">
+                <Link href="/feed">
+                  <MessageSquare className="mr-1 h-4 w-4" />
+                  Feed
+                </Link>
+              </Button>
+              <Button variant="ghost" size="sm" asChild className="text-slate-600 hover:text-primary">
                 <Link href="/businesses">
-                  <Building className="mr-2 h-4 w-4" />
+                  <Building className="mr-1 h-4 w-4" />
                   Businesses
                 </Link>
               </Button>
-              <Button variant="ghost" size="sm" asChild className="flex-1 text-slate-600 hover:text-primary">
+              <Button variant="ghost" size="sm" asChild className="text-slate-600 hover:text-primary">
                 <Link href="/contractors">
-                  <Wrench className="mr-2 h-4 w-4" />
+                  <Wrench className="mr-1 h-4 w-4" />
                   Contractors
                 </Link>
               </Button>
