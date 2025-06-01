@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Building, MapPin, Search, Filter, Star, Phone, Mail, Tag } from "lucide-react";
+import { Building, MapPin, Search, Filter, Star, Phone, Mail, Tag, ArrowLeft, LogOut } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import AuthGuard from "@/components/AuthGuard";
+import { Link, useLocation } from "wouter";
 import type { User } from "@shared/schema";
 
 const businessTypes = [
@@ -28,18 +29,24 @@ const businessTypes = [
 ];
 
 export default function Businesses() {
+  const [, navigate] = useLocation();
   const [search, setSearch] = useState("");
   const [businessType, setBusinessType] = useState("");
-  const [location, setLocation] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
   const [showFilters, setShowFilters] = useState(false);
 
+  const handleLogout = () => {
+    localStorage.removeItem('currentUser');
+    navigate("/");
+  };
+
   const { data: businessesData, isLoading } = useQuery({
-    queryKey: ["/api/businesses", { search, businessType, location }],
+    queryKey: ["/api/businesses", { search, businessType, location: locationFilter }],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (search) params.append("search", search);
       if (businessType && businessType !== "all") params.append("businessType", businessType);
-      if (location) params.append("location", location);
+      if (locationFilter) params.append("location", locationFilter);
       
       const response = await fetch(`/api/businesses?${params}`);
       if (!response.ok) throw new Error("Failed to fetch businesses");
@@ -52,7 +59,7 @@ export default function Businesses() {
   const clearFilters = () => {
     setSearch("");
     setBusinessType("all");
-    setLocation("");
+    setLocationFilter("");
   };
 
   const BusinessCard = ({ business }: { business: User }) => (
@@ -139,7 +146,33 @@ export default function Businesses() {
   return (
     <AuthGuard>
       <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* Navigation Header */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" asChild className="text-slate-600 hover:text-primary">
+                <Link href="/dashboard">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to Dashboard
+                </Link>
+              </Button>
+              <div className="h-6 w-px bg-gray-300"></div>
+              <h1 className="text-xl font-semibold text-slate-900">Find Businesses</h1>
+            </div>
+            <Button 
+              variant="ghost" 
+              onClick={handleLogout}
+              className="text-slate-600 hover:text-primary"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Page Header */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
@@ -197,8 +230,8 @@ export default function Businesses() {
             
             <Input
               placeholder="Location"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
+              value={locationFilter}
+              onChange={(e) => setLocationFilter(e.target.value)}
             />
             
             <Button variant="outline" onClick={clearFilters}>
