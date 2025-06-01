@@ -167,8 +167,10 @@ export default function Contractors() {
           </div>
         )}
         
-        <Button className="w-full mt-4">
-          View Profile
+        <Button className="w-full mt-4" asChild>
+          <Link href={`/profile/contractor/${contractor.id}`}>
+            View Profile
+          </Link>
         </Button>
       </CardContent>
     </Card>

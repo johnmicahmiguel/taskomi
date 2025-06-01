@@ -246,6 +246,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user profile by ID
+  app.get("/api/profile/:id", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+
+      const user = await storage.getUserProfile(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Remove password from response
+      const { password, ...userResponse } = user;
+      res.json({ success: true, user: userResponse });
+    } catch (error) {
+      console.error("Get user profile error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

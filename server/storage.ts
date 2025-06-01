@@ -28,6 +28,7 @@ export interface IStorage {
   markOtpAsUsed(id: number): Promise<void>;
   getBusinesses(filters?: { search?: string; businessType?: string; location?: string; tags?: string[] }): Promise<User[]>;
   getContractors(filters?: { search?: string; skills?: string[]; location?: string; tags?: string[] }): Promise<User[]>;
+  getUserProfile(id: number): Promise<User | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -167,6 +168,11 @@ export class DatabaseStorage implements IStorage {
     }
     
     return await query;
+  }
+
+  async getUserProfile(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 }
 

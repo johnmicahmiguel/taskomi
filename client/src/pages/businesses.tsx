@@ -136,8 +136,10 @@ export default function Businesses() {
           </div>
         )}
         
-        <Button className="w-full mt-4">
-          View Profile
+        <Button className="w-full mt-4" asChild>
+          <Link href={`/profile/business/${business.id}`}>
+            View Profile
+          </Link>
         </Button>
       </CardContent>
     </Card>
