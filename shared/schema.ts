@@ -10,9 +10,12 @@ export const users = pgTable("users", {
   lastName: text("last_name").notNull(),
   userType: text("user_type").notNull(), // 'business' or 'contractor'
   companyName: text("company_name"), // for business users
+  businessType: text("business_type"), // for business users: 'construction', 'restaurant', 'medical', etc.
   phoneNumber: text("phone_number"),
   location: text("location"),
   skills: text("skills").array(), // for contractors
+  certifications: text("certifications").array(), // for contractors
+  tags: text("tags").array(), // generic tags for both user types
   bio: text("bio"),
   isVerified: boolean("is_verified").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -42,6 +45,34 @@ export const otpVerifications = pgTable("otp_verifications", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const projects = pgTable("projects", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  images: text("images").array(), // array of image URLs
+  projectType: text("project_type"), // 'residential', 'commercial', 'industrial', etc.
+  completionDate: timestamp("completion_date"),
+  budgetRange: text("budget_range"), // '$1k-5k', '$5k-10k', etc.
+  location: text("location"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const jobOrders = pgTable("job_orders", {
+  id: serial("id").primaryKey(),
+  businessOwnerId: integer("business_owner_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  budgetRange: text("budget_range"),
+  projectSize: text("project_size"), // 'small', 'medium', 'large'
+  deadline: timestamp("deadline"),
+  location: text("location"),
+  requiredSkills: text("required_skills").array(),
+  status: text("status").default("open").notNull(), // 'open', 'in_progress', 'completed', 'cancelled'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   isVerified: true,
@@ -64,6 +95,17 @@ export const insertOtpVerificationSchema = createInsertSchema(otpVerifications).
   createdAt: true,
 });
 
+export const insertProjectSchema = createInsertSchema(projects).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertJobOrderSchema = createInsertSchema(jobOrders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type ContactSubmission = typeof contactSubmissions.$inferSelect;
@@ -72,3 +114,7 @@ export type NewsletterSubscription = typeof newsletterSubscriptions.$inferSelect
 export type InsertNewsletterSubscription = z.infer<typeof insertNewsletterSubscriptionSchema>;
 export type OtpVerification = typeof otpVerifications.$inferSelect;
 export type InsertOtpVerification = z.infer<typeof insertOtpVerificationSchema>;
+export type Project = typeof projects.$inferSelect;
+export type InsertProject = z.infer<typeof insertProjectSchema>;
+export type JobOrder = typeof jobOrders.$inferSelect;
+export type InsertJobOrder = z.infer<typeof insertJobOrderSchema>;
