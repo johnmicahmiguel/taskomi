@@ -335,6 +335,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get "For You" feed (all posts except current user's, sorted by most recent)
+  app.get("/api/posts/for-you", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const posts = await storage.getForYouPosts(req.session.userId);
+      res.json({ success: true, posts });
+    } catch (error) {
+      console.error("Get for you posts error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Get posts by user
   app.get("/api/posts/user/:userId", async (req, res) => {
     try {

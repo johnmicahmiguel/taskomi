@@ -16,7 +16,7 @@ import {
   type InsertPost
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gt, or, ilike, inArray, desc } from "drizzle-orm";
+import { eq, and, gt, or, ilike, inArray, desc, ne } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -36,6 +36,7 @@ export interface IStorage {
   getPosts(filters?: { userId?: number; postType?: string; tags?: string[] }): Promise<any[]>;
   getPostsByUser(userId: number): Promise<any[]>;
   getPostById(id: number): Promise<any | undefined>;
+  getForYouPosts(currentUserId: number): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -267,6 +268,34 @@ export class DatabaseStorage implements IStorage {
       }
     }).from(posts).innerJoin(users, eq(posts.userId, users.id)).where(eq(posts.id, id));
     return post || undefined;
+  }
+
+  async getForYouPosts(currentUserId: number): Promise<any[]> {
+    return await db.select({
+      id: posts.id,
+      userId: posts.userId,
+      content: posts.content,
+      postType: posts.postType,
+      mediaUrls: posts.mediaUrls,
+      mediaType: posts.mediaType,
+      location: posts.location,
+      tags: posts.tags,
+      likesCount: posts.likesCount,
+      commentsCount: posts.commentsCount,
+      createdAt: posts.createdAt,
+      updatedAt: posts.updatedAt,
+      user: {
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        userType: users.userType,
+        companyName: users.companyName,
+        businessType: users.businessType
+      }
+    }).from(posts)
+      .innerJoin(users, eq(posts.userId, users.id))
+      .where(ne(posts.userId, currentUserId))
+      .orderBy(desc(posts.createdAt));
   }
 }
 

@@ -55,13 +55,24 @@ export default function Feed() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch posts
-  const { data: postsData, isLoading } = useQuery({
+  // Fetch my feed posts
+  const { data: myFeedData, isLoading: isLoadingMyFeed } = useQuery({
     queryKey: ["/api/posts"],
-    enabled: true,
+    enabled: activeTab === "my-feed",
   });
 
-  const posts: Post[] = (postsData as any)?.posts || [];
+  // Fetch for you feed posts
+  const { data: forYouFeedData, isLoading: isLoadingForYou } = useQuery({
+    queryKey: ["/api/posts/for-you"],
+    enabled: activeTab === "for-you",
+  });
+
+  // Determine which posts to show based on active tab
+  const posts: Post[] = activeTab === "my-feed" 
+    ? (myFeedData as any)?.posts || []
+    : (forYouFeedData as any)?.posts || [];
+
+  const isLoading = activeTab === "my-feed" ? isLoadingMyFeed : isLoadingForYou;
 
   // Create post mutation
   const createPostMutation = useMutation({
@@ -81,6 +92,7 @@ export default function Feed() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/posts/for-you"] });
       clearForm();
       toast({
         title: "Success",
