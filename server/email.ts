@@ -12,34 +12,36 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
   }
 
   try {
-    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-      method: 'POST',
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'api-key': process.env.BREVO_API_KEY,
+        "Content-Type": "application/json",
+        "api-key": process.env.BREVO_API_KEY,
       },
       body: JSON.stringify({
         sender: {
           name: "ConnectPro",
-          email: params.from
+          email: params.from,
         },
-        to: [{
-          email: params.to
-        }],
+        to: [
+          {
+            email: params.to,
+          },
+        ],
         subject: params.subject,
-        htmlContent: params.htmlContent
-      })
+        htmlContent: params.htmlContent,
+      }),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('Brevo email error:', errorData);
+      console.error("Brevo email error:", errorData);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Email sending error:', error);
+    console.error("Email sending error:", error);
     return false;
   }
 }
