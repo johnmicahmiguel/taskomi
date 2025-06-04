@@ -451,10 +451,34 @@ export default function Feed() {
             </TabsContent>
 
             <TabsContent value="for-you" className="space-y-4">
-              <div className="text-center py-12">
-                <p className="text-gray-500 dark:text-gray-400 mb-4">For You feed coming soon</p>
-                <p className="text-sm text-gray-400 dark:text-gray-500">We're working on personalized recommendations</p>
-              </div>
+              {isLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <Card key={i} className="animate-pulse">
+                      <CardContent className="p-4">
+                        <div className="flex space-x-3">
+                          <div className="h-10 w-10 bg-gray-300 rounded-full"></div>
+                          <div className="flex-1 space-y-2">
+                            <div className="h-4 bg-gray-300 rounded w-1/4"></div>
+                            <div className="h-3 bg-gray-300 rounded w-1/6"></div>
+                            <div className="space-y-2">
+                              <div className="h-3 bg-gray-300 rounded"></div>
+                              <div className="h-3 bg-gray-300 rounded w-5/6"></div>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : posts.length > 0 ? (
+                posts.map((post) => <PostCard key={post.id} post={post} />)
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 dark:text-gray-400 mb-4">No posts to show</p>
+                  <p className="text-sm text-gray-400 dark:text-gray-500">Check back later for updates from the community</p>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>
