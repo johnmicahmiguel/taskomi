@@ -199,6 +199,9 @@ export default function Feed() {
     const { data: commentsData } = getCommentsQuery(post.id);
     const isLiked = likedData?.liked || false;
     const comments = commentsData?.comments || [];
+    
+    // Local state for this specific post's comment input
+    const [localCommentInput, setLocalCommentInput] = useState("");
 
     return (
       <Card className="mb-4 border-gray-200 dark:border-gray-700">
@@ -333,19 +336,33 @@ export default function Feed() {
               <div className="flex items-center space-x-2 mb-4">
                 <Input
                   placeholder="Write a comment..."
-                  value={commentInputs[post.id] || ""}
-                  onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))}
+                  value={localCommentInput}
+                  onChange={(e) => setLocalCommentInput(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
-                      handleCommentSubmit(post.id);
+                      if (localCommentInput.trim()) {
+                        createCommentMutation.mutate({ 
+                          postId: post.id, 
+                          content: localCommentInput.trim() 
+                        });
+                        setLocalCommentInput("");
+                      }
                     }
                   }}
                 />
                 <Button 
                   size="sm" 
-                  onClick={() => handleCommentSubmit(post.id)}
-                  disabled={!commentInputs[post.id]?.trim() || createCommentMutation.isPending}
+                  onClick={() => {
+                    if (localCommentInput.trim()) {
+                      createCommentMutation.mutate({ 
+                        postId: post.id, 
+                        content: localCommentInput.trim() 
+                      });
+                      setLocalCommentInput("");
+                    }
+                  }}
+                  disabled={!localCommentInput.trim() || createCommentMutation.isPending}
                 >
                   <Send className="h-4 w-4" />
                 </Button>

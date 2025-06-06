@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRoute, Link, useLocation } from "wouter";
-import { Building, Wrench, MapPin, Phone, Mail, ArrowLeft, LogOut, Star, Award, Settings, Edit, MessageSquare, Heart, Hash, MoreVertical, Trash2 } from "lucide-react";
+import { Building, Wrench, MapPin, Phone, Mail, ArrowLeft, LogOut, Star, Award, Settings, Edit, MessageSquare, Heart, Hash, MoreVertical, Trash2, MessageCircle, Send } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,9 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import AuthGuard from "@/components/AuthGuard";
 import { formatDistanceToNow } from "date-fns";
 import type { User } from "@shared/schema";
@@ -34,6 +37,10 @@ export default function Profile() {
   const [, navigate] = useLocation();
   const [match, params] = useRoute("/profile/:userType/:id");
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [showComments, setShowComments] = useState<Record<number, boolean>>({});
+  
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Determine back button text based on referrer
   const getBackButtonText = () => {
