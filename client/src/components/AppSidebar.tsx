@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Home, MessageSquare, Building, Wrench, User, Plus } from "lucide-react";
+import { Home, MessageSquare, Building, Wrench, User, Plus, LogOut } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -21,6 +21,31 @@ export default function AppSidebar() {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Logout mutation
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to logout");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.clear();
+      window.location.href = "/login";
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to logout",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Create post mutation
   const createPostMutation = useMutation({
@@ -170,6 +195,16 @@ export default function AppSidebar() {
               <User className="mr-3 h-5 w-5" />
               Profile
             </Link>
+          </Button>
+
+          <Button 
+            variant="ghost"
+            onClick={() => logoutMutation.mutate()}
+            disabled={logoutMutation.isPending}
+            className="w-full justify-start text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+          >
+            <LogOut className="mr-3 h-5 w-5" />
+            {logoutMutation.isPending ? "Logging out..." : "Logout"}
           </Button>
         </nav>
 
