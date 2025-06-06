@@ -4,6 +4,7 @@ import {
   newsletterSubscriptions,
   otpVerifications,
   posts,
+  jobOrders,
   likes,
   comments,
   type User, 
@@ -16,6 +17,8 @@ import {
   type InsertOtpVerification,
   type Post,
   type InsertPost,
+  type JobOrder,
+  type InsertJobOrder,
   type Like,
   type InsertLike,
   type Comment,
@@ -50,6 +53,12 @@ export interface IStorage {
   createComment(comment: InsertComment): Promise<Comment>;
   getCommentsByPost(postId: number): Promise<any[]>;
   deleteComment(commentId: number, userId: number): Promise<boolean>;
+  createJobOrder(jobOrder: InsertJobOrder): Promise<JobOrder>;
+  getJobOrdersByBusiness(businessOwnerId: number): Promise<JobOrder[]>;
+  getJobOrderById(id: number): Promise<JobOrder | undefined>;
+  updateJobOrder(id: number, updates: Partial<JobOrder>): Promise<JobOrder | undefined>;
+  deleteJobOrder(id: number, businessOwnerId: number): Promise<boolean>;
+  getJobOrdersByStatus(businessOwnerId: number, status: string): Promise<JobOrder[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -390,6 +399,50 @@ export class DatabaseStorage implements IStorage {
   async deleteComment(commentId: number, userId: number): Promise<boolean> {
     const result = await db.delete(comments).where(and(eq(comments.id, commentId), eq(comments.userId, userId)));
     return (result.rowCount || 0) > 0;
+  }
+
+  async createJobOrder(insertJobOrder: InsertJobOrder): Promise<JobOrder> {
+    const [jobOrder] = await db.insert(jobOrders).values(insertJobOrder).returning();
+    return jobOrder;
+  }
+
+  async getJobOrdersByBusiness(businessOwnerId: number): Promise<JobOrder[]> {
+    return await db.select().from(jobOrders)
+      .where(eq(jobOrders.businessOwnerId, businessOwnerId))
+      .orderBy(desc(jobOrders.createdAt));
+  }
+
+  async getJobOrderById(id: number): Promise<JobOrder | undefined> {
+    const [jobOrder] = await db.select().from(jobOrders).where(eq(jobOrders.id, id));
+    return jobOrder;
+  }
+
+  async updateJobOrder(id: number, updates: Partial<JobOrder>): Promise<JobOrder | undefined> {
+    const [jobOrder] = await db.update(jobOrders)
+      .set(updates)
+      .where(eq(jobOrders.id, id))
+      .returning();
+    return jobOrder;
+  }
+
+  async deleteJobOrder(id: number, businessOwnerId: number): Promise<boolean> {
+    const [jobOrder] = await db.select().from(jobOrders).where(eq(jobOrders.id, id));
+    
+    if (!jobOrder || jobOrder.businessOwnerId !== businessOwnerId) {
+      return false;
+    }
+    
+    await db.delete(jobOrders).where(eq(jobOrders.id, id));
+    return true;
+  }
+
+  async getJobOrdersByStatus(businessOwnerId: number, status: string): Promise<JobOrder[]> {
+    return await db.select().from(jobOrders)
+      .where(and(
+        eq(jobOrders.businessOwnerId, businessOwnerId),
+        eq(jobOrders.status, status)
+      ))
+      .orderBy(desc(jobOrders.createdAt));
   }
 }
 

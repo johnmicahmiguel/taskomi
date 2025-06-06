@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import session from "express-session";
 import { storage } from "./storage";
-import { insertContactSubmissionSchema, insertNewsletterSubscriptionSchema, insertUserSchema, insertPostSchema } from "@shared/schema";
+import { insertContactSubmissionSchema, insertNewsletterSubscriptionSchema, insertUserSchema, insertPostSchema, insertJobOrderSchema } from "@shared/schema";
 import { z } from "zod";
 import { sendEmail, generateOTP, getOTPEmailTemplate } from "./email";
 import bcrypt from "bcryptjs";
