@@ -67,6 +67,7 @@ export default function JobOrders() {
   // Create job order mutation
   const createJobOrderMutation = useMutation({
     mutationFn: async (data: JobOrderFormData) => {
+      console.log("Sending job order data:", data);
       const response = await fetch("/api/job-orders", {
         method: "POST",
         headers: {
@@ -75,10 +76,14 @@ export default function JobOrders() {
         body: JSON.stringify(data),
         credentials: "include"
       });
+      
+      const result = await response.json();
+      console.log("Job order response:", result);
+      
       if (!response.ok) {
-        throw new Error("Failed to create job order");
+        throw new Error(result.message || "Failed to create job order");
       }
-      return response.json();
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/job-orders"] });
@@ -184,9 +189,17 @@ export default function JobOrders() {
     }
 
     const submitData = {
-      ...formData,
-      requiredSkills: formData.requiredSkills || []
-    } as JobOrderFormData;
+      title: formData.title,
+      description: formData.description,
+      budgetRange: formData.budgetRange || null,
+      projectSize: formData.projectSize || null,
+      deadline: formData.deadline || null,
+      location: formData.location || null,
+      requiredSkills: formData.requiredSkills && formData.requiredSkills.length > 0 ? formData.requiredSkills : null,
+      status: formData.status || "open"
+    };
+
+    console.log("Submitting job order:", submitData);
 
     if (editingJobOrder) {
       updateJobOrderMutation.mutate({ id: editingJobOrder.id, data: submitData });
@@ -312,10 +325,10 @@ export default function JobOrders() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="budgetRange">Budget Range</Label>
+                    <Label htmlFor="budgetRange">Budget Range (PHP)</Label>
                     <Input
                       id="budgetRange"
-                      placeholder="e.g., $1,000 - $5,000"
+                      placeholder="e.g., ₱50,000 - ₱250,000"
                       value={formData.budgetRange || ""}
                       onChange={(e) => setFormData(prev => ({ ...prev, budgetRange: e.target.value }))}
                     />
@@ -352,6 +365,8 @@ export default function JobOrders() {
                     <Input
                       id="deadline"
                       type="date"
+                      min={format(new Date(), "yyyy-MM-dd")}
+                      max="2030-12-31"
                       value={formData.deadline ? format(formData.deadline, "yyyy-MM-dd") : ""}
                       onChange={(e) => setFormData(prev => ({ 
                         ...prev, 
@@ -365,7 +380,7 @@ export default function JobOrders() {
                   <Label htmlFor="requiredSkills">Required Skills</Label>
                   <Input
                     id="requiredSkills"
-                    placeholder="e.g., React, Node.js, TypeScript (comma separated)"
+                    placeholder="e.g., Plumbing, Electrical Work, Carpentry (comma separated)"
                     value={formData.requiredSkills?.join(", ") || ""}
                     onChange={(e) => setFormData(prev => ({ 
                       ...prev, 
