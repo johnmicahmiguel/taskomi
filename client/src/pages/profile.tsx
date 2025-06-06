@@ -35,6 +35,19 @@ export default function Profile() {
   const [match, params] = useRoute("/profile/:userType/:id");
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
+  // Determine back button text based on referrer
+  const getBackButtonText = () => {
+    if (typeof window !== 'undefined') {
+      const referrer = document.referrer;
+      if (referrer.includes('/feed')) {
+        return 'Back to Feed';
+      } else if (referrer.includes('/businesses') || referrer.includes('/contractors')) {
+        return 'Back to Directory';
+      }
+    }
+    return 'Back to Directory'; // Default
+  };
+
   useEffect(() => {
     const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
@@ -155,11 +168,13 @@ export default function Profile() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center space-x-4">
-                <Button variant="ghost" asChild className="text-slate-600 hover:text-primary">
-                  <Link href={userType === "business" ? "/businesses" : "/contractors"}>
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Directory
-                  </Link>
+                <Button 
+                  variant="ghost" 
+                  className="text-slate-600 hover:text-primary"
+                  onClick={() => window.history.back()}
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  {getBackButtonText()}
                 </Button>
                 <div className="h-6 w-px bg-gray-300"></div>
                 <h1 className="text-xl font-semibold text-slate-900">
@@ -329,6 +344,205 @@ export default function Profile() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Tabs for About and Posts */}
+          <Tabs defaultValue="about" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="about">About</TabsTrigger>
+              <TabsTrigger value="posts">Posts ({userPosts.length})</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="about" className="space-y-4">
+              <Card>
+                <CardContent className="pt-6 space-y-6">
+                  {/* Contact Information */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex items-center space-x-2">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <span>{user.email}</span>
+                      </div>
+                      {user.phoneNumber && (
+                        <div className="flex items-center space-x-2">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          <span>{user.phoneNumber}</span>
+                        </div>
+                      )}
+                      {user.location && (
+                        <div className="flex items-center space-x-2">
+                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                          <span>{user.location}</span>
+                        </div>
+                      )}
+                      {user.businessType && (
+                        <div className="flex items-center space-x-2">
+                          <Building className="h-4 w-4 text-muted-foreground" />
+                          <span>{businessTypes.find(type => type.value === user.businessType)?.label || user.businessType}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* About/Bio */}
+                  {user.bio && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">About</h3>
+                      <p className="text-muted-foreground leading-relaxed">{user.bio}</p>
+                    </div>
+                  )}
+
+                  {/* Skills */}
+                  {user.skills && user.skills.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4">Skills</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {user.skills.map((skill: any, index: number) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {skill}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Certifications */}
+                  {user.certifications && user.certifications.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4">Certifications</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {user.certifications.map((cert: any, index: number) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            <Award className="h-3 w-3 mr-1" />
+                            {cert}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tags */}
+                  {user.tags && user.tags.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4">Tags</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {user.tags.map((tag: any, index: number) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Member Since */}
+                  <Separator />
+                  <div className="text-sm text-muted-foreground">
+                    Member since {new Date(user.createdAt).toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="posts" className="space-y-4">
+              {isLoadingPosts ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <Card key={i} className="animate-pulse">
+                      <CardContent className="p-4">
+                        <div className="flex space-x-3">
+                          <div className="h-10 w-10 bg-gray-300 rounded-full"></div>
+                          <div className="flex-1 space-y-2">
+                            <div className="h-4 bg-gray-300 rounded w-1/4"></div>
+                            <div className="h-3 bg-gray-300 rounded w-1/6"></div>
+                            <div className="space-y-2">
+                              <div className="h-3 bg-gray-300 rounded"></div>
+                              <div className="h-3 bg-gray-300 rounded w-5/6"></div>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : userPosts.length > 0 ? (
+                userPosts.map((post: any) => (
+                  <Card key={post.id} className="border-gray-200 dark:border-gray-700">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start space-x-3">
+                        <Avatar className="h-10 w-10">
+                          <AvatarFallback className="bg-blue-500 text-white">
+                            {post.user.firstName[0]}{post.user.lastName[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-2">
+                            <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+                              {post.user.companyName || `${post.user.firstName} ${post.user.lastName}`}
+                            </h3>
+                            <Badge variant="secondary" className="text-xs">
+                              {post.user.userType}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {formatDistanceToNow(new Date(post.createdAt))} ago
+                          </p>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      {post.content && (
+                        <p className="text-gray-900 dark:text-gray-100 mb-3 whitespace-pre-wrap">
+                          {post.content}
+                        </p>
+                      )}
+
+                      {post.location && (
+                        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
+                          <MapPin className="h-4 w-4 mr-1" />
+                          {post.location}
+                        </div>
+                      )}
+
+                      {post.tags && post.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {post.tags.map((tag: string, index: number) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              <Hash className="h-3 w-3 mr-1" />
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
+                        <div className="flex items-center space-x-2 text-gray-500">
+                          <Heart className="h-4 w-4" />
+                          <span>{post.likesCount}</span>
+                        </div>
+                        <div className="flex items-center space-x-2 text-gray-500">
+                          <MessageSquare className="h-4 w-4" />
+                          <span>{post.commentsCount}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <div className="text-center py-12">
+                  <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No posts yet</h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {isOwnProfile ? "You haven't shared anything yet!" : "This user hasn't shared anything yet."}
+                  </p>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </AuthGuard>

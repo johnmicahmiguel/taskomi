@@ -335,8 +335,9 @@ export default function Feed() {
                   placeholder="Write a comment..."
                   value={commentInputs[post.id] || ""}
                   onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))}
-                  onKeyPress={(e) => {
+                  onKeyDown={(e) => {
                     if (e.key === 'Enter') {
+                      e.preventDefault();
                       handleCommentSubmit(post.id);
                     }
                   }}
