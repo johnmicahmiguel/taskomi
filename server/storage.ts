@@ -4,6 +4,8 @@ import {
   newsletterSubscriptions,
   otpVerifications,
   posts,
+  likes,
+  comments,
   type User, 
   type InsertUser,
   type ContactSubmission,
@@ -13,7 +15,11 @@ import {
   type OtpVerification,
   type InsertOtpVerification,
   type Post,
-  type InsertPost
+  type InsertPost,
+  type Like,
+  type InsertLike,
+  type Comment,
+  type InsertComment
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gt, or, ilike, inArray, desc, ne } from "drizzle-orm";
@@ -37,6 +43,13 @@ export interface IStorage {
   getPostsByUser(userId: number): Promise<any[]>;
   getPostById(id: number): Promise<any | undefined>;
   getForYouPosts(currentUserId: number): Promise<any[]>;
+  deletePost(postId: number, userId: number): Promise<boolean>;
+  likePost(userId: number, postId: number): Promise<Like>;
+  unlikePost(userId: number, postId: number): Promise<boolean>;
+  isPostLiked(userId: number, postId: number): Promise<boolean>;
+  createComment(comment: InsertComment): Promise<Comment>;
+  getCommentsByPost(postId: number): Promise<any[]>;
+  deleteComment(commentId: number, userId: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
