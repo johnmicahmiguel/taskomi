@@ -44,6 +44,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get current user
+  app.get("/api/user", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ success: true, user });
+    } catch (error) {
+      console.error("Get user error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Newsletter subscription
   app.post("/api/newsletter", async (req, res) => {
     try {
@@ -236,12 +255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get current user
-  app.get("/api/user", async (req, res) => {
-    // For now, we'll implement a simple check
-    // In a real app, you'd validate a session or JWT token
-    res.status(401).json({ message: "Not authenticated" });
-  });
+
 
   // Get businesses directory with filtering
   app.get("/api/businesses", async (req, res) => {
