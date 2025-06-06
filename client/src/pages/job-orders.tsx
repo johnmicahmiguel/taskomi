@@ -316,19 +316,19 @@ export default function JobOrders() {
                     <Input
                       id="budgetRange"
                       placeholder="e.g., $1,000 - $5,000"
-                      value={formData.budgetRange}
+                      value={formData.budgetRange || ""}
                       onChange={(e) => setFormData(prev => ({ ...prev, budgetRange: e.target.value }))}
                     />
                   </div>
                   
                   <div>
                     <Label htmlFor="projectSize">Project Size</Label>
-                    <Select value={formData.projectSize} onValueChange={(value) => setFormData(prev => ({ ...prev, projectSize: value }))}>
+                    <Select value={formData.projectSize || undefined} onValueChange={(value) => setFormData(prev => ({ ...prev, projectSize: value }))}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select size" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="small">Small (&lt; 1 month)</SelectItem>
+                        <SelectItem value="small">Small (less than 1 month)</SelectItem>
                         <SelectItem value="medium">Medium (1-3 months)</SelectItem>
                         <SelectItem value="large">Large (3+ months)</SelectItem>
                       </SelectContent>

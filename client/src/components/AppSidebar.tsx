@@ -5,10 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Home, MessageSquare, Building, Wrench, User, Plus, LogOut } from "lucide-react";
+import { Home, MessageSquare, Building, Wrench, User, Plus, LogOut, Briefcase } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function AppSidebar() {
   const [location] = useLocation();
@@ -18,9 +18,28 @@ export default function AppSidebar() {
   const [tags, setTags] = useState("");
   const [mediaUrls, setMediaUrls] = useState("");
   const [mediaType, setMediaType] = useState<"image" | "video">("image");
+  const [currentUser, setCurrentUser] = useState<any>(null);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Get current user to determine if they're a business owner
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      try {
+        const response = await fetch("/api/user", {
+          credentials: "include"
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setCurrentUser(data.user);
+        }
+      } catch (error) {
+        console.error("Failed to get current user:", error);
+      }
+    };
+    getCurrentUser();
+  }, []);
 
   // Logout mutation
   const logoutMutation = useMutation({
