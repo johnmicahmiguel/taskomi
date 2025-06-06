@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRoute, Link, useLocation } from "wouter";
-import { Building, Wrench, MapPin, Phone, Mail, ArrowLeft, LogOut, Star, Award, Settings, Edit, MessageSquare } from "lucide-react";
+import { Building, Wrench, MapPin, Phone, Mail, ArrowLeft, LogOut, Star, Award, Settings, Edit, MessageSquare, Heart, Hash, MoreVertical, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AuthGuard from "@/components/AuthGuard";
+import { formatDistanceToNow } from "date-fns";
 import type { User } from "@shared/schema";
 
 const businessTypes = [
@@ -55,6 +58,18 @@ export default function Profile() {
     enabled: !!params?.id
   });
 
+  // Fetch user's posts
+  const { data: userPostsData, isLoading: isLoadingPosts } = useQuery({
+    queryKey: ["/api/posts/user", params?.id],
+    queryFn: async () => {
+      if (!params?.id) throw new Error("No user ID provided");
+      const response = await fetch(`/api/posts/user/${params.id}`);
+      if (!response.ok) throw new Error("Failed to fetch user posts");
+      return response.json();
+    },
+    enabled: !!params?.id
+  });
+
   const handleLogout = () => {
     localStorage.removeItem('currentUser');
     navigate("/");
@@ -79,6 +94,7 @@ export default function Profile() {
   const user = profileData?.user;
   const userType = params.userType;
   const isOwnProfile = currentUser?.id === parseInt(params.id);
+  const userPosts = userPostsData?.posts || [];
 
   if (isLoading) {
     return (
