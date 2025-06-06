@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Building, Wrench, User, Mail, Phone, MapPin, Shield, ShieldCheck, Clock } from "lucide-react";
+import { Building, Wrench, User, Mail, Phone, MapPin, Shield, ShieldCheck, Clock, Briefcase } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
@@ -333,12 +333,30 @@ export default function Dashboard() {
             </Button>
             
             {user.userType === "business" ? (
-              <Button className="w-full justify-start" variant="outline">
-                <Wrench className="h-4 w-4 mr-2" />
-                Find Contractors
-              </Button>
+              <>
+                <Button 
+                  className="w-full justify-start" 
+                  variant="outline"
+                  onClick={() => setLocation("/job-orders")}
+                >
+                  <Briefcase className="h-4 w-4 mr-2" />
+                  Create Job Order
+                </Button>
+                <Button 
+                  className="w-full justify-start" 
+                  variant="outline"
+                  onClick={() => setLocation("/contractors")}
+                >
+                  <Wrench className="h-4 w-4 mr-2" />
+                  Find Contractors
+                </Button>
+              </>
             ) : (
-              <Button className="w-full justify-start" variant="outline">
+              <Button 
+                className="w-full justify-start" 
+                variant="outline"
+                onClick={() => setLocation("/businesses")}
+              >
                 <Building className="h-4 w-4 mr-2" />
                 Find Businesses
               </Button>

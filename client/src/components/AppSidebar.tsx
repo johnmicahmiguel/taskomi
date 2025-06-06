@@ -216,6 +216,21 @@ export default function AppSidebar() {
             </Link>
           </Button>
 
+          {currentUser?.userType === "business" && (
+            <Button 
+              variant="ghost" 
+              asChild 
+              className={`w-full justify-start text-left hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                isActive("/job-orders") ? "bg-primary/10 text-primary hover:bg-primary/20" : ""
+              }`}
+            >
+              <Link href="/job-orders">
+                <Briefcase className="mr-3 h-5 w-5" />
+                My Job Orders
+              </Link>
+            </Button>
+          )}
+
           <Button 
             variant="ghost"
             onClick={() => logoutMutation.mutate()}
