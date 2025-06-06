@@ -575,10 +575,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Only business owners can create job orders" });
       }
 
-      const validatedData = insertJobOrderSchema.parse({
+      // Convert deadline string to Date if provided
+      const requestData = {
         ...req.body,
-        businessOwnerId: req.session.userId
-      });
+        businessOwnerId: req.session.userId,
+        deadline: req.body.deadline ? new Date(req.body.deadline) : null
+      };
+
+      const validatedData = insertJobOrderSchema.parse(requestData);
 
       const jobOrder = await storage.createJobOrder(validatedData);
       res.json({ success: true, jobOrder });

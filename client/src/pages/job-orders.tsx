@@ -66,7 +66,7 @@ export default function JobOrders() {
 
   // Create job order mutation
   const createJobOrderMutation = useMutation({
-    mutationFn: async (data: JobOrderFormData) => {
+    mutationFn: async (data: any) => {
       console.log("Sending job order data:", data);
       const response = await fetch("/api/job-orders", {
         method: "POST",
@@ -105,7 +105,7 @@ export default function JobOrders() {
 
   // Update job order mutation
   const updateJobOrderMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Partial<JobOrderFormData> }) => {
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
       const response = await fetch(`/api/job-orders/${id}`, {
         method: "PUT",
         headers: {
@@ -193,7 +193,7 @@ export default function JobOrders() {
       description: formData.description,
       budgetRange: formData.budgetRange || null,
       projectSize: formData.projectSize || null,
-      deadline: formData.deadline || null,
+      deadline: formData.deadline ? formData.deadline.toISOString() : null,
       location: formData.location || null,
       requiredSkills: formData.requiredSkills && formData.requiredSkills.length > 0 ? formData.requiredSkills : null,
       status: formData.status || "open"
