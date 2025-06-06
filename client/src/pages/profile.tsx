@@ -43,19 +43,6 @@ export default function Profile() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Determine back button text based on referrer
-  const getBackButtonText = () => {
-    if (typeof window !== 'undefined') {
-      const referrer = document.referrer;
-      if (referrer.includes('/feed')) {
-        return 'Back to Feed';
-      } else if (referrer.includes('/businesses') || referrer.includes('/contractors')) {
-        return 'Back to Directory';
-      }
-    }
-    return 'Back to Directory'; // Default
-  };
-
   useEffect(() => {
     const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
@@ -90,32 +77,6 @@ export default function Profile() {
     },
     enabled: !!params?.id
   });
-
-  const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    navigate("/");
-  };
-
-  if (!match || !params) {
-    return (
-      <AuthGuard>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Profile Not Found</h2>
-            <p className="text-gray-600 mb-4">The profile you're looking for doesn't exist.</p>
-            <Button asChild>
-              <Link href="/dashboard">Back to Dashboard</Link>
-            </Button>
-          </div>
-        </div>
-      </AuthGuard>
-    );
-  }
-
-  const user = profileData?.user;
-  const userType = params.userType;
-  const isOwnProfile = currentUser?.id === parseInt(params.id);
-  const userPosts = userPostsData?.posts || [];
 
   // Like/Unlike mutation
   const likePostMutation = useMutation({
@@ -165,6 +126,45 @@ export default function Profile() {
       });
     },
   });
+
+  // Determine back button text based on referrer
+  const getBackButtonText = () => {
+    if (typeof window !== 'undefined') {
+      const referrer = document.referrer;
+      if (referrer.includes('/feed')) {
+        return 'Back to Feed';
+      } else if (referrer.includes('/businesses') || referrer.includes('/contractors')) {
+        return 'Back to Directory';
+      }
+    }
+    return 'Back to Directory'; // Default
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('currentUser');
+    navigate("/");
+  };
+
+  if (!match || !params) {
+    return (
+      <AuthGuard>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Profile Not Found</h2>
+            <p className="text-gray-600 mb-4">The profile you're looking for doesn't exist.</p>
+            <Button asChild>
+              <Link href="/dashboard">Back to Dashboard</Link>
+            </Button>
+          </div>
+        </div>
+      </AuthGuard>
+    );
+  }
+
+  const user = profileData?.user;
+  const userType = params.userType;
+  const isOwnProfile = currentUser?.id === parseInt(params.id);
+  const userPosts = userPostsData?.posts || [];
 
 
 
