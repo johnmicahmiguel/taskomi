@@ -146,9 +146,9 @@ export default function Dashboard() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 lg:gap-8">
         {/* Profile Card */}
-        <Card className="lg:col-span-2">
+        <Card className="xl:col-span-3">
           <CardHeader>
             <div className="flex items-center space-x-4">
               <div className={`w-16 h-16 rounded-full flex items-center justify-center ${

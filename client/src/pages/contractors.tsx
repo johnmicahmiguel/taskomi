@@ -205,13 +205,14 @@ export default function Contractors() {
           
           {/* Filters */}
           <div className={`mt-4 space-y-4 ${showFilters ? 'block' : 'hidden lg:block'}`}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               <Input
                 placeholder="Location"
                 value={locationFilter}
                 onChange={(e) => setLocationFilter(e.target.value)}
               />
-              <Button variant="outline" onClick={clearFilters}>
+              <div className="md:col-span-1 lg:col-span-2 xl:col-span-3"></div>
+              <Button variant="outline" onClick={clearFilters} className="w-full">
                 Clear Filters
               </Button>
             </div>
@@ -237,8 +238,8 @@ export default function Contractors() {
 
         {/* Results */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 lg:gap-6">
+            {[...Array(10)].map((_, i) => (
               <Card key={i}>
                 <CardHeader>
                   <div className="flex items-center space-x-3">
@@ -264,7 +265,7 @@ export default function Contractors() {
                 Found {contractors.length} contractor{contractors.length !== 1 ? 's' : ''}
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 lg:gap-6">
               {contractors.map((contractor: User) => (
                 <ContractorCard key={contractor.id} contractor={contractor} />
               ))}
