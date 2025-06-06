@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Building, MapPin, Search, Filter, Star, Phone, Mail, Tag, ArrowLeft, LogOut } from "lucide-react";
+import { Building, MapPin, Search, Filter, Star, Phone, Mail, Tag } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import AuthGuard from "@/components/AuthGuard";
-import { Link, useLocation } from "wouter";
+import AppLayout from "@/components/AppLayout";
+import { Link } from "wouter";
 import type { User } from "@shared/schema";
 
 const businessTypes = [
@@ -29,16 +29,10 @@ const businessTypes = [
 ];
 
 export default function Businesses() {
-  const [, navigate] = useLocation();
   const [search, setSearch] = useState("");
   const [businessType, setBusinessType] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-
-  const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    navigate("/");
-  };
 
   const { data: businessesData, isLoading } = useQuery({
     queryKey: ["/api/businesses", { search, businessType, location: locationFilter }],
@@ -146,51 +140,15 @@ export default function Businesses() {
   );
 
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-gray-50">
-      {/* Navigation Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" asChild className="text-slate-600 hover:text-primary">
-                <Link href="/dashboard">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to Dashboard
-                </Link>
-              </Button>
-              <div className="h-6 w-px bg-gray-300"></div>
-              <h1 className="text-xl font-semibold text-slate-900">Find Businesses</h1>
-            </div>
-            <Button 
-              variant="ghost" 
-              onClick={handleLogout}
-              className="text-slate-600 hover:text-primary"
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* Page Header */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Find Businesses
-            </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Connect with businesses looking for contractors and services
-            </p>
-          </div>
-        </div>
+    <AppLayout>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Find Businesses</h1>
+        <p className="text-gray-600 dark:text-gray-400">Connect with businesses looking for contractors and services</p>
       </div>
 
       {/* Search and Filters */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+      <div className="mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6">
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Search */}
             <div className="flex-1 relative">
@@ -267,7 +225,7 @@ export default function Businesses() {
         ) : businesses.length > 0 ? (
           <>
             <div className="flex justify-between items-center mb-6">
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-400">
                 Found {businesses.length} business{businesses.length !== 1 ? 'es' : ''}
               </p>
             </div>
@@ -280,8 +238,8 @@ export default function Businesses() {
         ) : (
           <div className="text-center py-12">
             <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No businesses found</h3>
-            <p className="text-gray-600 mb-4">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No businesses found</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
               Try adjusting your search criteria or filters
             </p>
             <Button variant="outline" onClick={clearFilters}>
@@ -290,7 +248,6 @@ export default function Businesses() {
           </div>
         )}
       </div>
-      </div>
-    </AuthGuard>
+    </AppLayout>
   );
 }
