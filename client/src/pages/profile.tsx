@@ -38,6 +38,7 @@ export default function Profile() {
   const [match, params] = useRoute("/profile/:userType/:id");
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showComments, setShowComments] = useState<Record<number, boolean>>({});
+  const [commentInputs, setCommentInputs] = useState<Record<number, string>>({});
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -165,30 +166,18 @@ export default function Profile() {
     },
   });
 
-  // Check if post is liked
-  const isPostLikedQuery = (postId: number) => useQuery({
-    queryKey: ["/api/posts", postId, "liked"],
-    queryFn: async () => {
-      const response = await fetch(`/api/posts/${postId}/liked`);
-      if (!response.ok) throw new Error('Failed to check like status');
-      return response.json();
-    },
-    enabled: !!currentUser,
-  });
 
-  // Get comments for a post
-  const getCommentsQuery = (postId: number) => useQuery({
-    queryKey: ["/api/posts", postId, "comments"],
-    queryFn: async () => {
-      const response = await fetch(`/api/posts/${postId}/comments`);
-      if (!response.ok) throw new Error('Failed to fetch comments');
-      return response.json();
-    },
-    enabled: showComments[postId] || false,
-  });
 
   const handleLikePost = (postId: number) => {
     likePostMutation.mutate(postId);
+  };
+
+  const handleCommentSubmit = (postId: number) => {
+    const content = commentInputs[postId]?.trim();
+    if (content) {
+      createCommentMutation.mutate({ postId, content });
+      setCommentInputs(prev => ({ ...prev, [postId]: "" }));
+    }
   };
 
   const toggleComments = (postId: number) => {
@@ -556,156 +545,68 @@ export default function Profile() {
                   ))}
                 </div>
               ) : userPosts.length > 0 ? (
-                userPosts.map((post: any) => {
-                  const { data: likedData } = isPostLikedQuery(post.id);
-                  const { data: commentsData } = getCommentsQuery(post.id);
-                  const isLiked = likedData?.liked || false;
-                  const comments = commentsData?.comments || [];
-                  const [localCommentInput, setLocalCommentInput] = useState("");
-
-                  return (
-                    <Card key={post.id} className="border-gray-200 dark:border-gray-700">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start space-x-3">
-                          <Avatar className="h-10 w-10">
-                            <AvatarFallback className="bg-blue-500 text-white">
-                              {post.user.firstName[0]}{post.user.lastName[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center space-x-2">
-                              <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
-                                {post.user.companyName || `${post.user.firstName} ${post.user.lastName}`}
-                              </h3>
-                              <Badge variant="secondary" className="text-xs">
-                                {post.user.userType}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              {formatDistanceToNow(new Date(post.createdAt))} ago
-                            </p>
+                userPosts.map((post: any) => (
+                  <Card key={post.id} className="border-gray-200 dark:border-gray-700">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start space-x-3">
+                        <Avatar className="h-10 w-10">
+                          <AvatarFallback className="bg-blue-500 text-white">
+                            {post.user.firstName[0]}{post.user.lastName[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-2">
+                            <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+                              {post.user.companyName || `${post.user.firstName} ${post.user.lastName}`}
+                            </h3>
+                            <Badge variant="secondary" className="text-xs">
+                              {post.user.userType}
+                            </Badge>
                           </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        {post.content && (
-                          <p className="text-gray-900 dark:text-gray-100 mb-3 whitespace-pre-wrap">
-                            {post.content}
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {formatDistanceToNow(new Date(post.createdAt))} ago
                           </p>
-                        )}
-
-                        {post.location && (
-                          <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
-                            <MapPin className="h-4 w-4 mr-1" />
-                            {post.location}
-                          </div>
-                        )}
-
-                        {post.tags && post.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mb-3">
-                            {post.tags.map((tag: string, index: number) => (
-                              <Badge key={index} variant="outline" className="text-xs">
-                                <Hash className="h-3 w-3 mr-1" />
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-
-                        <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className={`flex items-center space-x-2 ${isLiked ? 'text-red-500' : ''}`}
-                            onClick={() => handleLikePost(post.id)}
-                            disabled={likePostMutation.isPending}
-                          >
-                            <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
-                            <span>{post.likesCount}</span>
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="flex items-center space-x-2"
-                            onClick={() => toggleComments(post.id)}
-                          >
-                            <MessageCircle className="h-4 w-4" />
-                            <span>{post.commentsCount}</span>
-                          </Button>
                         </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      {post.content && (
+                        <p className="text-gray-900 dark:text-gray-100 mb-3 whitespace-pre-wrap">
+                          {post.content}
+                        </p>
+                      )}
 
-                        {/* Comments Section */}
-                        {showComments[post.id] && (
-                          <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                            {/* Comment Input */}
-                            <div className="flex items-center space-x-2 mb-4">
-                              <Input
-                                placeholder="Write a comment..."
-                                value={localCommentInput}
-                                onChange={(e) => setLocalCommentInput(e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    if (localCommentInput.trim()) {
-                                      createCommentMutation.mutate({ 
-                                        postId: post.id, 
-                                        content: localCommentInput.trim() 
-                                      });
-                                      setLocalCommentInput("");
-                                    }
-                                  }
-                                }}
-                              />
-                              <Button 
-                                size="sm" 
-                                onClick={() => {
-                                  if (localCommentInput.trim()) {
-                                    createCommentMutation.mutate({ 
-                                      postId: post.id, 
-                                      content: localCommentInput.trim() 
-                                    });
-                                    setLocalCommentInput("");
-                                  }
-                                }}
-                                disabled={!localCommentInput.trim() || createCommentMutation.isPending}
-                              >
-                                <Send className="h-4 w-4" />
-                              </Button>
-                            </div>
+                      {post.location && (
+                        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
+                          <MapPin className="h-4 w-4 mr-1" />
+                          {post.location}
+                        </div>
+                      )}
 
-                            {/* Comments List */}
-                            <div className="space-y-3">
-                              {comments.map((comment: any) => (
-                                <div key={comment.id} className="flex space-x-3">
-                                  <Avatar className="h-8 w-8">
-                                    <AvatarFallback className="bg-gray-500 text-white text-sm">
-                                      {comment.user.firstName[0]}{comment.user.lastName[0]}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div className="flex-1">
-                                    <div className="bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2">
-                                      <div className="flex items-center space-x-2 mb-1">
-                                        <span className="font-semibold text-sm text-gray-900 dark:text-gray-100">
-                                          {comment.user.companyName || `${comment.user.firstName} ${comment.user.lastName}`}
-                                        </span>
-                                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                                          {formatDistanceToNow(new Date(comment.createdAt))} ago
-                                        </span>
-                                      </div>
-                                      <p className="text-sm text-gray-900 dark:text-gray-100">
-                                        {comment.content}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })
+                      {post.tags && post.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {post.tags.map((tag: string, index: number) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              <Hash className="h-3 w-3 mr-1" />
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
+                        <div className="flex items-center space-x-2 text-gray-500">
+                          <Heart className="h-4 w-4" />
+                          <span>{post.likesCount}</span>
+                        </div>
+                        <div className="flex items-center space-x-2 text-gray-500">
+                          <MessageSquare className="h-4 w-4" />
+                          <span>{post.commentsCount}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
               ) : (
                 <div className="text-center py-12">
                   <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
