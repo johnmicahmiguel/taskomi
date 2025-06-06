@@ -406,6 +406,147 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete post
+  app.delete("/api/posts/:id", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const postId = parseInt(req.params.id);
+      if (isNaN(postId)) {
+        return res.status(400).json({ message: "Invalid post ID" });
+      }
+
+      const deleted = await storage.deletePost(postId, req.session.userId);
+      if (!deleted) {
+        return res.status(404).json({ message: "Post not found or unauthorized" });
+      }
+
+      res.json({ success: true, message: "Post deleted successfully" });
+    } catch (error) {
+      console.error("Delete post error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Like/Unlike post
+  app.post("/api/posts/:id/like", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const postId = parseInt(req.params.id);
+      if (isNaN(postId)) {
+        return res.status(400).json({ message: "Invalid post ID" });
+      }
+
+      const isLiked = await storage.isPostLiked(req.session.userId, postId);
+      
+      if (isLiked) {
+        await storage.unlikePost(req.session.userId, postId);
+        res.json({ success: true, liked: false, message: "Post unliked" });
+      } else {
+        await storage.likePost(req.session.userId, postId);
+        res.json({ success: true, liked: true, message: "Post liked" });
+      }
+    } catch (error) {
+      console.error("Like/unlike post error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Check if post is liked
+  app.get("/api/posts/:id/liked", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const postId = parseInt(req.params.id);
+      if (isNaN(postId)) {
+        return res.status(400).json({ message: "Invalid post ID" });
+      }
+
+      const isLiked = await storage.isPostLiked(req.session.userId, postId);
+      res.json({ success: true, liked: isLiked });
+    } catch (error) {
+      console.error("Check like status error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Create comment
+  app.post("/api/posts/:id/comments", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const postId = parseInt(req.params.id);
+      if (isNaN(postId)) {
+        return res.status(400).json({ message: "Invalid post ID" });
+      }
+
+      const { content } = req.body;
+      if (!content || content.trim().length === 0) {
+        return res.status(400).json({ message: "Comment content is required" });
+      }
+
+      const comment = await storage.createComment({
+        userId: req.session.userId,
+        postId,
+        content: content.trim()
+      });
+
+      res.json({ success: true, comment });
+    } catch (error) {
+      console.error("Create comment error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get comments for post
+  app.get("/api/posts/:id/comments", async (req, res) => {
+    try {
+      const postId = parseInt(req.params.id);
+      if (isNaN(postId)) {
+        return res.status(400).json({ message: "Invalid post ID" });
+      }
+
+      const comments = await storage.getCommentsByPost(postId);
+      res.json({ success: true, comments });
+    } catch (error) {
+      console.error("Get comments error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Delete comment
+  app.delete("/api/comments/:id", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const commentId = parseInt(req.params.id);
+      if (isNaN(commentId)) {
+        return res.status(400).json({ message: "Invalid comment ID" });
+      }
+
+      const deleted = await storage.deleteComment(commentId, req.session.userId);
+      if (!deleted) {
+        return res.status(404).json({ message: "Comment not found or unauthorized" });
+      }
+
+      res.json({ success: true, message: "Comment deleted successfully" });
+    } catch (error) {
+      console.error("Delete comment error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

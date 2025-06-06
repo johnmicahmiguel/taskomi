@@ -22,7 +22,7 @@ import {
   type InsertComment
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gt, or, ilike, inArray, desc, ne } from "drizzle-orm";
+import { eq, and, gt, or, ilike, inArray, desc, ne, count, sql } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -309,6 +309,87 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(users, eq(posts.userId, users.id))
       .where(ne(posts.userId, currentUserId))
       .orderBy(desc(posts.createdAt));
+  }
+
+  async deletePost(postId: number, userId: number): Promise<boolean> {
+    const result = await db.delete(posts).where(and(eq(posts.id, postId), eq(posts.userId, userId)));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async likePost(userId: number, postId: number): Promise<Like> {
+    // Check if already liked
+    const existingLike = await db.select().from(likes).where(and(eq(likes.userId, userId), eq(likes.postId, postId)));
+    if (existingLike.length > 0) {
+      throw new Error("Post already liked");
+    }
+
+    const [like] = await db.insert(likes).values({ userId, postId }).returning();
+    
+    // Update post likes count
+    const likesCountResult = await db.select({ count: count(likes.id) }).from(likes).where(eq(likes.postId, postId));
+    const likesCount = Number(likesCountResult[0]?.count || 0);
+    
+    await db.update(posts).set({ likesCount }).where(eq(posts.id, postId));
+
+    return like;
+  }
+
+  async unlikePost(userId: number, postId: number): Promise<boolean> {
+    const result = await db.delete(likes).where(and(eq(likes.userId, userId), eq(likes.postId, postId)));
+    
+    if ((result.rowCount || 0) > 0) {
+      // Update post likes count
+      const likesCountResult = await db.select({ count: count(likes.id) }).from(likes).where(eq(likes.postId, postId));
+      const likesCount = Number(likesCountResult[0]?.count || 0);
+      
+      await db.update(posts).set({ likesCount }).where(eq(posts.id, postId));
+    }
+
+    return (result.rowCount || 0) > 0;
+  }
+
+  async isPostLiked(userId: number, postId: number): Promise<boolean> {
+    const [like] = await db.select().from(likes).where(and(eq(likes.userId, userId), eq(likes.postId, postId)));
+    return !!like;
+  }
+
+  async createComment(insertComment: InsertComment): Promise<Comment> {
+    const [comment] = await db.insert(comments).values(insertComment).returning();
+    
+    // Update post comments count
+    const commentsCountResult = await db.select({ count: count(comments.id) }).from(comments).where(eq(comments.postId, insertComment.postId));
+    const commentsCount = Number(commentsCountResult[0]?.count || 0);
+    
+    await db.update(posts).set({ commentsCount }).where(eq(posts.id, insertComment.postId));
+
+    return comment;
+  }
+
+  async getCommentsByPost(postId: number): Promise<any[]> {
+    return await db.select({
+      id: comments.id,
+      userId: comments.userId,
+      postId: comments.postId,
+      content: comments.content,
+      createdAt: comments.createdAt,
+      updatedAt: comments.updatedAt,
+      user: {
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        userType: users.userType,
+        companyName: users.companyName,
+        businessType: users.businessType
+      }
+    }).from(comments)
+      .innerJoin(users, eq(comments.userId, users.id))
+      .where(eq(comments.postId, postId))
+      .orderBy(desc(comments.createdAt));
+  }
+
+  async deleteComment(commentId: number, userId: number): Promise<boolean> {
+    const result = await db.delete(comments).where(and(eq(comments.id, commentId), eq(comments.userId, userId)));
+    return (result.rowCount || 0) > 0;
   }
 }
 
