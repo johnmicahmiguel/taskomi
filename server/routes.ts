@@ -216,6 +216,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User logout
+  app.post("/api/logout", async (req, res) => {
+    try {
+      // Destroy the session
+      req.session.destroy((err) => {
+        if (err) {
+          console.error("Session destruction error:", err);
+          return res.status(500).json({ message: "Failed to logout" });
+        }
+        
+        // Clear the session cookie
+        res.clearCookie('connect.sid');
+        res.json({ success: true, message: "Logged out successfully" });
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Get current user
   app.get("/api/user", async (req, res) => {
     // For now, we'll implement a simple check
