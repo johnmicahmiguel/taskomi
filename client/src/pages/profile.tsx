@@ -116,6 +116,85 @@ export default function Profile() {
   const isOwnProfile = currentUser?.id === parseInt(params.id);
   const userPosts = userPostsData?.posts || [];
 
+  // Like/Unlike mutation
+  const likePostMutation = useMutation({
+    mutationFn: async (postId: number) => {
+      const response = await fetch(`/api/posts/${postId}/like`, { method: "POST" });
+      if (!response.ok) throw new Error('Failed to like post');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/posts/user"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to like post",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Create comment mutation
+  const createCommentMutation = useMutation({
+    mutationFn: async ({ postId, content }: { postId: number; content: string }) => {
+      const response = await fetch(`/api/posts/${postId}/comments`, {
+        method: "POST",
+        body: JSON.stringify({ content }),
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!response.ok) throw new Error('Failed to create comment');
+      return response.json();
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/posts", variables.postId, "comments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/posts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/posts/user"] });
+      toast({
+        title: "Success",
+        description: "Comment added successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add comment",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Check if post is liked
+  const isPostLikedQuery = (postId: number) => useQuery({
+    queryKey: ["/api/posts", postId, "liked"],
+    queryFn: async () => {
+      const response = await fetch(`/api/posts/${postId}/liked`);
+      if (!response.ok) throw new Error('Failed to check like status');
+      return response.json();
+    },
+    enabled: !!currentUser,
+  });
+
+  // Get comments for a post
+  const getCommentsQuery = (postId: number) => useQuery({
+    queryKey: ["/api/posts", postId, "comments"],
+    queryFn: async () => {
+      const response = await fetch(`/api/posts/${postId}/comments`);
+      if (!response.ok) throw new Error('Failed to fetch comments');
+      return response.json();
+    },
+    enabled: showComments[postId] || false,
+  });
+
+  const handleLikePost = (postId: number) => {
+    likePostMutation.mutate(postId);
+  };
+
+  const toggleComments = (postId: number) => {
+    setShowComments(prev => ({ ...prev, [postId]: !prev[postId] }));
+  };
+
   if (isLoading) {
     return (
       <AuthGuard>
@@ -477,68 +556,156 @@ export default function Profile() {
                   ))}
                 </div>
               ) : userPosts.length > 0 ? (
-                userPosts.map((post: any) => (
-                  <Card key={post.id} className="border-gray-200 dark:border-gray-700">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start space-x-3">
-                        <Avatar className="h-10 w-10">
-                          <AvatarFallback className="bg-blue-500 text-white">
-                            {post.user.firstName[0]}{post.user.lastName[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-2">
-                            <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
-                              {post.user.companyName || `${post.user.firstName} ${post.user.lastName}`}
-                            </h3>
-                            <Badge variant="secondary" className="text-xs">
-                              {post.user.userType}
-                            </Badge>
+                userPosts.map((post: any) => {
+                  const { data: likedData } = isPostLikedQuery(post.id);
+                  const { data: commentsData } = getCommentsQuery(post.id);
+                  const isLiked = likedData?.liked || false;
+                  const comments = commentsData?.comments || [];
+                  const [localCommentInput, setLocalCommentInput] = useState("");
+
+                  return (
+                    <Card key={post.id} className="border-gray-200 dark:border-gray-700">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start space-x-3">
+                          <Avatar className="h-10 w-10">
+                            <AvatarFallback className="bg-blue-500 text-white">
+                              {post.user.firstName[0]}{post.user.lastName[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-2">
+                              <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+                                {post.user.companyName || `${post.user.firstName} ${post.user.lastName}`}
+                              </h3>
+                              <Badge variant="secondary" className="text-xs">
+                                {post.user.userType}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              {formatDistanceToNow(new Date(post.createdAt))} ago
+                            </p>
                           </div>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
-                            {formatDistanceToNow(new Date(post.createdAt))} ago
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        {post.content && (
+                          <p className="text-gray-900 dark:text-gray-100 mb-3 whitespace-pre-wrap">
+                            {post.content}
                           </p>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      {post.content && (
-                        <p className="text-gray-900 dark:text-gray-100 mb-3 whitespace-pre-wrap">
-                          {post.content}
-                        </p>
-                      )}
+                        )}
 
-                      {post.location && (
-                        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
-                          <MapPin className="h-4 w-4 mr-1" />
-                          {post.location}
-                        </div>
-                      )}
+                        {post.location && (
+                          <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
+                            <MapPin className="h-4 w-4 mr-1" />
+                            {post.location}
+                          </div>
+                        )}
 
-                      {post.tags && post.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mb-3">
-                          {post.tags.map((tag: string, index: number) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              <Hash className="h-3 w-3 mr-1" />
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
+                        {post.tags && post.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            {post.tags.map((tag: string, index: number) => (
+                              <Badge key={index} variant="outline" className="text-xs">
+                                <Hash className="h-3 w-3 mr-1" />
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
 
-                      <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
-                        <div className="flex items-center space-x-2 text-gray-500">
-                          <Heart className="h-4 w-4" />
-                          <span>{post.likesCount}</span>
+                        <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className={`flex items-center space-x-2 ${isLiked ? 'text-red-500' : ''}`}
+                            onClick={() => handleLikePost(post.id)}
+                            disabled={likePostMutation.isPending}
+                          >
+                            <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
+                            <span>{post.likesCount}</span>
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="flex items-center space-x-2"
+                            onClick={() => toggleComments(post.id)}
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                            <span>{post.commentsCount}</span>
+                          </Button>
                         </div>
-                        <div className="flex items-center space-x-2 text-gray-500">
-                          <MessageSquare className="h-4 w-4" />
-                          <span>{post.commentsCount}</span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
+
+                        {/* Comments Section */}
+                        {showComments[post.id] && (
+                          <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                            {/* Comment Input */}
+                            <div className="flex items-center space-x-2 mb-4">
+                              <Input
+                                placeholder="Write a comment..."
+                                value={localCommentInput}
+                                onChange={(e) => setLocalCommentInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    if (localCommentInput.trim()) {
+                                      createCommentMutation.mutate({ 
+                                        postId: post.id, 
+                                        content: localCommentInput.trim() 
+                                      });
+                                      setLocalCommentInput("");
+                                    }
+                                  }
+                                }}
+                              />
+                              <Button 
+                                size="sm" 
+                                onClick={() => {
+                                  if (localCommentInput.trim()) {
+                                    createCommentMutation.mutate({ 
+                                      postId: post.id, 
+                                      content: localCommentInput.trim() 
+                                    });
+                                    setLocalCommentInput("");
+                                  }
+                                }}
+                                disabled={!localCommentInput.trim() || createCommentMutation.isPending}
+                              >
+                                <Send className="h-4 w-4" />
+                              </Button>
+                            </div>
+
+                            {/* Comments List */}
+                            <div className="space-y-3">
+                              {comments.map((comment: any) => (
+                                <div key={comment.id} className="flex space-x-3">
+                                  <Avatar className="h-8 w-8">
+                                    <AvatarFallback className="bg-gray-500 text-white text-sm">
+                                      {comment.user.firstName[0]}{comment.user.lastName[0]}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex-1">
+                                    <div className="bg-gray-100 dark:bg-gray-800 rounded-lg px-3 py-2">
+                                      <div className="flex items-center space-x-2 mb-1">
+                                        <span className="font-semibold text-sm text-gray-900 dark:text-gray-100">
+                                          {comment.user.companyName || `${comment.user.firstName} ${comment.user.lastName}`}
+                                        </span>
+                                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                                          {formatDistanceToNow(new Date(comment.createdAt))} ago
+                                        </span>
+                                      </div>
+                                      <p className="text-sm text-gray-900 dark:text-gray-100">
+                                        {comment.content}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })
               ) : (
                 <div className="text-center py-12">
                   <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
