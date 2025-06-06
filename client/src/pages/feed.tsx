@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import AppLayout from "@/components/AppLayout";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle, Share, MapPin, Hash, MessageSquare } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import type { User } from "@shared/schema";
 
 interface Post {
   id: number;
@@ -34,11 +35,29 @@ interface Post {
 
 export default function Feed() {
   const [activeTab, setActiveTab] = useState("my-feed");
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  // Fetch my feed posts
+  useEffect(() => {
+    const storedUser = localStorage.getItem('currentUser');
+    if (storedUser) {
+      try {
+        setCurrentUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error('Failed to parse stored user:', error);
+      }
+    }
+  }, []);
+
+  // Fetch my feed posts (current user's posts only)
   const { data: myFeedData, isLoading: isLoadingMyFeed } = useQuery({
-    queryKey: ["/api/posts"],
-    enabled: activeTab === "my-feed",
+    queryKey: ["/api/posts", "userId", currentUser?.id],
+    queryFn: async () => {
+      if (!currentUser?.id) return { posts: [] };
+      const response = await fetch(`/api/posts?userId=${currentUser.id}`);
+      if (!response.ok) throw new Error('Failed to fetch posts');
+      return response.json();
+    },
+    enabled: activeTab === "my-feed" && !!currentUser?.id,
   });
 
   // Fetch for you feed posts
