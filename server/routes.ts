@@ -547,6 +547,148 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Job Order Routes
+  
+  // Create job order
+  app.post("/api/job-orders", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUser(req.session.userId);
+      if (!user || user.userType !== "business") {
+        return res.status(403).json({ message: "Only business owners can create job orders" });
+      }
+
+      const validatedData = insertJobOrderSchema.parse({
+        ...req.body,
+        businessOwnerId: req.session.userId
+      });
+
+      const jobOrder = await storage.createJobOrder(validatedData);
+      res.json({ success: true, jobOrder });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors 
+        });
+      }
+      console.error("Create job order error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get job orders for business owner
+  app.get("/api/job-orders", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUser(req.session.userId);
+      if (!user || user.userType !== "business") {
+        return res.status(403).json({ message: "Only business owners can view job orders" });
+      }
+
+      const { status } = req.query;
+      let jobOrders;
+
+      if (status && typeof status === "string") {
+        jobOrders = await storage.getJobOrdersByStatus(req.session.userId, status);
+      } else {
+        jobOrders = await storage.getJobOrdersByBusiness(req.session.userId);
+      }
+
+      res.json({ success: true, jobOrders });
+    } catch (error) {
+      console.error("Get job orders error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get specific job order
+  app.get("/api/job-orders/:id", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const jobOrderId = parseInt(req.params.id);
+      if (isNaN(jobOrderId)) {
+        return res.status(400).json({ message: "Invalid job order ID" });
+      }
+
+      const jobOrder = await storage.getJobOrderById(jobOrderId);
+      if (!jobOrder) {
+        return res.status(404).json({ message: "Job order not found" });
+      }
+
+      if (jobOrder.businessOwnerId !== req.session.userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      res.json({ success: true, jobOrder });
+    } catch (error) {
+      console.error("Get job order error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Update job order
+  app.put("/api/job-orders/:id", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const jobOrderId = parseInt(req.params.id);
+      if (isNaN(jobOrderId)) {
+        return res.status(400).json({ message: "Invalid job order ID" });
+      }
+
+      const existingJobOrder = await storage.getJobOrderById(jobOrderId);
+      if (!existingJobOrder) {
+        return res.status(404).json({ message: "Job order not found" });
+      }
+
+      if (existingJobOrder.businessOwnerId !== req.session.userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const updatedJobOrder = await storage.updateJobOrder(jobOrderId, req.body);
+      res.json({ success: true, jobOrder: updatedJobOrder });
+    } catch (error) {
+      console.error("Update job order error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Delete job order
+  app.delete("/api/job-orders/:id", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const jobOrderId = parseInt(req.params.id);
+      if (isNaN(jobOrderId)) {
+        return res.status(400).json({ message: "Invalid job order ID" });
+      }
+
+      const success = await storage.deleteJobOrder(jobOrderId, req.session.userId);
+      if (!success) {
+        return res.status(404).json({ message: "Job order not found or access denied" });
+      }
+
+      res.json({ success: true, message: "Job order deleted successfully" });
+    } catch (error) {
+      console.error("Delete job order error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
