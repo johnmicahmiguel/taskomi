@@ -54,23 +54,23 @@ export default function Contractors() {
 
   const ContractorCard = ({ contractor }: { contractor: User }) => (
     <Card className="h-full hover:shadow-lg transition-shadow duration-200">
-      <CardHeader className="pb-4">
+      <CardHeader className="pb-6">
         <div className="flex items-start justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center">
-              <Wrench className="h-6 w-6 text-accent" />
+          <div className="flex items-center space-x-4">
+            <div className="w-14 h-14 bg-accent/10 rounded-lg flex items-center justify-center">
+              <Wrench className="h-7 w-7 text-accent" />
             </div>
-            <div>
-              <CardTitle className="text-lg">
+            <div className="min-w-0 flex-1">
+              <CardTitle className="text-lg leading-tight">
                 {contractor.firstName} {contractor.lastName}
               </CardTitle>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground mt-1">
                 Contractor
               </p>
             </div>
           </div>
           {contractor.isVerified && (
-            <Badge variant="secondary" className="bg-green-100 text-green-800">
+            <Badge variant="secondary" className="bg-green-100 text-green-800 flex-shrink-0">
               <Star className="h-3 w-3 mr-1" />
               Verified
             </Badge>
@@ -78,36 +78,36 @@ export default function Contractors() {
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-5">
         {contractor.location && (
-          <div className="flex items-center space-x-2">
-            <MapPin className="h-4 w-4 text-muted-foreground" />
+          <div className="flex items-center space-x-3">
+            <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <span className="text-sm">{contractor.location}</span>
           </div>
         )}
         
         {contractor.phoneNumber && (
-          <div className="flex items-center space-x-2">
-            <Phone className="h-4 w-4 text-muted-foreground" />
+          <div className="flex items-center space-x-3">
+            <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <span className="text-sm">{contractor.phoneNumber}</span>
           </div>
         )}
         
-        <div className="flex items-center space-x-2">
-          <Mail className="h-4 w-4 text-muted-foreground" />
+        <div className="flex items-center space-x-3">
+          <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           <span className="text-sm">{contractor.email}</span>
         </div>
         
         {contractor.bio && (
-          <p className="text-sm text-muted-foreground line-clamp-3">
+          <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
             {contractor.bio}
           </p>
         )}
         
         {contractor.skills && contractor.skills.length > 0 && (
           <div>
-            <div className="flex items-center space-x-2 mb-2">
-              <Settings className="h-4 w-4 text-muted-foreground" />
+            <div className="flex items-center space-x-3 mb-3">
+              <Settings className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               <span className="text-sm font-medium">Skills</span>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -127,8 +127,8 @@ export default function Contractors() {
         
         {contractor.certifications && contractor.certifications.length > 0 && (
           <div>
-            <div className="flex items-center space-x-2 mb-2">
-              <Award className="h-4 w-4 text-muted-foreground" />
+            <div className="flex items-center space-x-3 mb-3">
+              <Award className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               <span className="text-sm font-medium">Certifications</span>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -161,7 +161,7 @@ export default function Contractors() {
           </div>
         )}
         
-        <Button className="w-full mt-4" asChild>
+        <Button className="w-full mt-6" asChild>
           <Link href={`/profile/contractor/${contractor.id}`}>
             View Profile
           </Link>
@@ -173,13 +173,13 @@ export default function Contractors() {
   return (
     <AppLayout>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Find Contractors</h1>
-        <p className="text-gray-600 dark:text-gray-400">Discover skilled contractors for your projects</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">Find Contractors</h1>
+        <p className="text-muted-foreground">Discover skilled contractors for your projects</p>
       </div>
 
       {/* Search and Filters */}
       <div className="mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6">
+        <div className="bg-card rounded-lg shadow-sm p-6 mb-6">
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Search */}
             <div className="flex-1 relative">
@@ -219,7 +219,7 @@ export default function Contractors() {
             
             {/* Skills Filter */}
             <div>
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Skills</h3>
+              <h3 className="text-sm font-medium text-foreground mb-3">Skills</h3>
               <div className="flex flex-wrap gap-2">
                 {commonSkills.map((skill) => (
                   <Badge
@@ -238,12 +238,12 @@ export default function Contractors() {
 
         {/* Results */}
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 lg:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {[...Array(10)].map((_, i) => (
               <Card key={i}>
                 <CardHeader>
                   <div className="flex items-center space-x-3">
-                    <Skeleton className="w-12 h-12 rounded-lg" />
+                    <Skeleton className="w-14 h-14 rounded-lg" />
                     <div>
                       <Skeleton className="h-4 w-32 mb-2" />
                       <Skeleton className="h-3 w-24" />
@@ -260,12 +260,12 @@ export default function Contractors() {
           </div>
         ) : contractors.length > 0 ? (
           <>
-            <div className="flex justify-between items-center mb-6">
-              <p className="text-gray-600 dark:text-gray-400">
+            <div className="flex justify-between items-center mb-8">
+              <p className="text-muted-foreground">
                 Found {contractors.length} contractor{contractors.length !== 1 ? 's' : ''}
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 lg:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
               {contractors.map((contractor: User) => (
                 <ContractorCard key={contractor.id} contractor={contractor} />
               ))}
@@ -274,8 +274,8 @@ export default function Contractors() {
         ) : (
           <div className="text-center py-12">
             <Wrench className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No contractors found</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
+            <h3 className="text-lg font-medium text-foreground mb-2">No contractors found</h3>
+            <p className="text-muted-foreground mb-4">
               Try adjusting your search criteria or filters
             </p>
             <Button variant="outline" onClick={clearFilters}>

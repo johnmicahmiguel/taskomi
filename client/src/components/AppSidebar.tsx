@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Home, MessageSquare, Building, Wrench, User, Plus, LogOut, Briefcase } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -142,11 +143,12 @@ export default function AppSidebar() {
   const isActive = (path: string) => location === path;
 
   return (
-    <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 min-h-screen p-4">
+    <div className="w-64 bg-card border-r border-border min-h-screen p-4">
       <div className="space-y-6">
         {/* Logo/Brand */}
-        <div className="px-2">
+        <div className="px-2 flex items-center justify-between">
           <h2 className="text-xl font-bold text-primary">ConnectPro</h2>
+          <ThemeToggle />
         </div>
 
         {/* Navigation Links */}
@@ -154,7 +156,7 @@ export default function AppSidebar() {
           <Button 
             variant="ghost" 
             asChild 
-            className={`w-full justify-start text-left hover:bg-gray-100 dark:hover:bg-gray-700 ${
+            className={`w-full justify-start text-left hover:bg-accent hover:text-accent-foreground ${
               isActive("/dashboard") ? "bg-primary/10 text-primary hover:bg-primary/20" : ""
             }`}
           >
@@ -167,7 +169,7 @@ export default function AppSidebar() {
           <Button 
             variant="ghost" 
             asChild
-            className={`w-full justify-start text-left hover:bg-gray-100 dark:hover:bg-gray-700 ${
+            className={`w-full justify-start text-left hover:bg-accent hover:text-accent-foreground ${
               isActive("/feed") ? "bg-primary/10 text-primary hover:bg-primary/20" : ""
             }`}
           >
@@ -180,7 +182,7 @@ export default function AppSidebar() {
           <Button 
             variant="ghost" 
             asChild 
-            className={`w-full justify-start text-left hover:bg-gray-100 dark:hover:bg-gray-700 ${
+            className={`w-full justify-start text-left hover:bg-accent hover:text-accent-foreground ${
               isActive("/businesses") ? "bg-primary/10 text-primary hover:bg-primary/20" : ""
             }`}
           >
@@ -193,7 +195,7 @@ export default function AppSidebar() {
           <Button 
             variant="ghost" 
             asChild 
-            className={`w-full justify-start text-left hover:bg-gray-100 dark:hover:bg-gray-700 ${
+            className={`w-full justify-start text-left hover:bg-accent hover:text-accent-foreground ${
               isActive("/contractors") ? "bg-primary/10 text-primary hover:bg-primary/20" : ""
             }`}
           >
@@ -206,7 +208,7 @@ export default function AppSidebar() {
           <Button 
             variant="ghost" 
             asChild 
-            className={`w-full justify-start text-left hover:bg-gray-100 dark:hover:bg-gray-700 ${
+            className={`w-full justify-start text-left hover:bg-accent hover:text-accent-foreground ${
               isActive("/profile") ? "bg-primary/10 text-primary hover:bg-primary/20" : ""
             }`}
           >
@@ -220,7 +222,7 @@ export default function AppSidebar() {
             <Button 
               variant="ghost" 
               asChild 
-              className={`w-full justify-start text-left hover:bg-gray-100 dark:hover:bg-gray-700 ${
+              className={`w-full justify-start text-left hover:bg-accent hover:text-accent-foreground ${
                 isActive("/job-orders") ? "bg-primary/10 text-primary hover:bg-primary/20" : ""
               }`}
             >
@@ -235,7 +237,7 @@ export default function AppSidebar() {
             variant="ghost"
             onClick={() => logoutMutation.mutate()}
             disabled={logoutMutation.isPending}
-            className="w-full justify-start text-left hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+            className="w-full justify-start text-left hover:bg-accent hover:text-accent-foreground text-destructive hover:text-destructive"
           >
             <LogOut className="mr-3 h-5 w-5" />
             {logoutMutation.isPending ? "Logging out..." : "Logout"}

@@ -1,6 +1,7 @@
 import AuthGuard from "@/components/AuthGuard";
 import AppSidebar from "@/components/AppSidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -10,48 +11,50 @@ interface AppLayoutProps {
 export default function AppLayout({ children, showRightSidebar = false }: AppLayoutProps) {
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="flex">
-          {/* Left Sidebar */}
-          <AppSidebar />
+      <ThemeProvider>
+        <div className="min-h-screen bg-background">
+          <div className="flex">
+            {/* Left Sidebar */}
+            <AppSidebar />
 
-          {/* Main Content */}
-          <div className="flex-1 p-4 lg:p-6 xl:p-8">
-            <div className="max-w-7xl mx-auto w-full">
-              {children}
-            </div>
-          </div>
-
-          {/* Right Sidebar (Optional) */}
-          {showRightSidebar && (
-            <div className="w-80 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 min-h-screen p-4 hidden lg:block">
-              <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Who to follow</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Suggestions coming soon
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Trending</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Trending topics coming soon
-                    </p>
-                  </CardContent>
-                </Card>
+            {/* Main Content */}
+            <div className="flex-1 p-4 lg:p-6 xl:p-8">
+              <div className="max-w-7xl mx-auto w-full">
+                {children}
               </div>
             </div>
-          )}
+
+            {/* Right Sidebar (Optional) */}
+            {showRightSidebar && (
+              <div className="w-80 bg-card border-l border-border min-h-screen p-4 hidden lg:block">
+                <div className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Who to follow</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">
+                        Suggestions coming soon
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Trending</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">
+                        Trending topics coming soon
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </ThemeProvider>
     </AuthGuard>
   );
 }

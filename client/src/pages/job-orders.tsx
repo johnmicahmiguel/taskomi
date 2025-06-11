@@ -229,7 +229,7 @@ export default function JobOrders() {
       case "in_progress": return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
       case "completed": return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
       case "cancelled": return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+      default: return "bg-muted text-muted-foreground";
     }
   };
 
@@ -277,7 +277,7 @@ export default function JobOrders() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">My Job Orders</h1>
-            <p className="text-gray-600 dark:text-gray-400">Manage your job postings and track applications</p>
+            <p className="text-muted-foreground">Manage your job postings and track applications</p>
           </div>
           
           <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
@@ -444,7 +444,7 @@ export default function JobOrders() {
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold">No job orders found</h3>
-                      <p className="text-gray-600 dark:text-gray-400">
+                      <p className="text-muted-foreground">
                         {activeTab === "all" 
                           ? "Create your first job order to get started" 
                           : `No ${activeTab} job orders at the moment`
@@ -466,7 +466,7 @@ export default function JobOrders() {
                       <div className="flex items-start justify-between">
                         <div className="space-y-2">
                           <CardTitle className="text-xl">{jobOrder.title}</CardTitle>
-                          <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
+                          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                             <Badge className={getStatusColor(jobOrder.status)}>
                               {getStatusIcon(jobOrder.status)}
                               <span className="ml-1 capitalize">{jobOrder.status.replace("_", " ")}</span>
@@ -509,7 +509,7 @@ export default function JobOrders() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-gray-700 dark:text-gray-300 mb-4 line-clamp-3">
+                      <p className="text-foreground mb-4 line-clamp-3">
                         {jobOrder.description}
                       </p>
                       
@@ -545,7 +545,7 @@ export default function JobOrders() {
                       
                       {jobOrder.requiredSkills && jobOrder.requiredSkills.length > 0 && (
                         <div className="mt-4">
-                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Required Skills:</p>
+                          <p className="text-sm font-medium text-foreground mb-2">Required Skills:</p>
                           <div className="flex flex-wrap gap-2">
                             {jobOrder.requiredSkills.map((skill: string) => (
                               <Badge key={skill} variant="outline">

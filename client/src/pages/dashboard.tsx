@@ -138,10 +138,10 @@ export default function Dashboard() {
   return (
     <AppLayout>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+        <h1 className="text-3xl font-bold text-foreground mb-2">
           Welcome back, {user.firstName}!
         </h1>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-muted-foreground">
           Here's what's happening with your {user.userType === "business" ? "business" : "contractor profile"} today.
         </p>
       </div>
@@ -174,14 +174,14 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="space-y-4">
             {user.companyName && (
-              <div className="flex items-center space-x-2 text-slate-600 dark:text-slate-400">
+              <div className="flex items-center space-x-2 text-muted-foreground">
                 <Building className="h-4 w-4" />
                 <span>{user.companyName}</span>
               </div>
             )}
             
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2 text-slate-600 dark:text-slate-400">
+              <div className="flex items-center space-x-2 text-muted-foreground">
                 <Mail className="h-4 w-4" />
                 <span>{user.email}</span>
               </div>
