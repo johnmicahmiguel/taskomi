@@ -15,6 +15,7 @@ import { insertUserSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import SEOHead from "@/components/SEOHead";
 
 // Extend the schema with additional validation
 const signupSchema = insertUserSchema.extend({
@@ -71,7 +72,7 @@ export default function Signup() {
       
       toast({
         title: "Account created successfully!",
-        description: "Welcome to ConnectPro. You can now start exploring opportunities.",
+        description: "Welcome to Taskomi. You can now start exploring opportunities.",
       });
       setLocation("/dashboard");
     },
@@ -101,6 +102,7 @@ export default function Signup() {
   if (!userType) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 flex items-center justify-center py-12 px-4">
+        <SEOHead title="Sign Up - Taskomi" description="Join Taskomi to connect with businesses and contractors. Choose your account type to get started." />
         <div className="max-w-2xl mx-auto text-center">
           <Button
             variant="ghost"
@@ -112,7 +114,7 @@ export default function Signup() {
           </Button>
           
           <h1 className="text-4xl font-bold text-slate-900 mb-6">
-            Join ConnectPro
+            Join Taskomi
           </h1>
           <p className="text-xl text-slate-600 mb-12">
             Choose how you'd like to get started
@@ -172,6 +174,7 @@ export default function Signup() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 py-12 px-4">
+      <SEOHead title={`Sign Up as ${userType === "business" ? "Business Owner" : "Contractor"} - Taskomi`} description={`Create your ${userType} account on Taskomi to start connecting with ${userType === "business" ? "contractors" : "businesses"}.`} />
       <div className="max-w-2xl mx-auto">
         <Button
           variant="ghost"

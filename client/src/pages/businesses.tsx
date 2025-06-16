@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import AppLayout from "@/components/AppLayout";
+import SEOHead from "@/components/SEOHead";
 import { Link } from "wouter";
 import type { User } from "@shared/schema";
 
@@ -141,6 +142,7 @@ export default function Businesses() {
 
   return (
     <AppLayout>
+      <SEOHead title="Find Businesses" description="Connect with businesses looking for contractors and services" />
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-foreground mb-2">Find Businesses</h1>
         <p className="text-muted-foreground">Connect with businesses looking for contractors and services</p>

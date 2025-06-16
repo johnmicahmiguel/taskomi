@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -10,7 +11,7 @@ import { ArrowLeft, LogIn } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { Link } from "wouter";
+import SEOHead from "@/components/SEOHead";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -62,6 +63,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 to-accent/5 flex items-center justify-center py-12 px-4">
+      <SEOHead title="Sign In - Taskomi" description="Sign in to your Taskomi account to connect with businesses and contractors." />
       <div className="max-w-md mx-auto w-full">
         <Link href="/">
           <Button
@@ -80,7 +82,7 @@ export default function Login() {
             </div>
             <CardTitle className="text-2xl">Welcome Back</CardTitle>
             <CardDescription>
-              Sign in to your ConnectPro account
+              Sign in to your Taskomi account
             </CardDescription>
           </CardHeader>
           

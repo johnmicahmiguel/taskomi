@@ -20,7 +20,7 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
       },
       body: JSON.stringify({
         sender: {
-          name: "ConnectPro",
+          name: "Taskomi",
           email: params.from,
         },
         to: [
@@ -62,7 +62,7 @@ export function getOTPEmailTemplate(otp: string, firstName: string): string {
     <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f8fafc;">
       <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 40px; border-radius: 8px; margin-top: 40px; margin-bottom: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
         <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #1e40af; margin: 0; font-size: 28px;">ConnectPro</h1>
+          <h1 style="color: #1e40af; margin: 0; font-size: 28px;">Taskomi</h1>
         </div>
         
         <h2 style="color: #1f2937; margin-bottom: 20px;">Verify Your Account</h2>
@@ -91,7 +91,7 @@ export function getOTPEmailTemplate(otp: string, firstName: string): string {
         
         <div style="border-top: 1px solid #e5e7eb; margin-top: 30px; padding-top: 20px; text-align: center;">
           <p style="color: #9ca3af; font-size: 12px; margin: 0;">
-            © 2025 ConnectPro. All rights reserved.
+            © 2025 Taskomi. All rights reserved.
           </p>
         </div>
       </div>

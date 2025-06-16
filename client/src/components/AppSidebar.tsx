@@ -147,7 +147,7 @@ export default function AppSidebar() {
       <div className="space-y-6">
         {/* Logo/Brand */}
         <div className="px-2 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-primary">ConnectPro</h2>
+          <h2 className="text-xl font-bold text-primary">Taskomi</h2>
           <ThemeToggle />
         </div>
 
@@ -209,10 +209,10 @@ export default function AppSidebar() {
             variant="ghost" 
             asChild 
             className={`w-full justify-start text-left hover:bg-accent hover:text-accent-foreground ${
-              isActive("/profile") ? "bg-primary/10 text-primary hover:bg-primary/20" : ""
+              location.startsWith("/profile") ? "bg-primary/10 text-primary hover:bg-primary/20" : ""
             }`}
           >
-            <Link href="/profile">
+            <Link href={currentUser ? `/profile/${currentUser.userType}/${currentUser.id}` : "/profile"}>
               <User className="mr-3 h-5 w-5" />
               Profile
             </Link>

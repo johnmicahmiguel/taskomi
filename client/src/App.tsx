@@ -12,6 +12,7 @@ import Contractors from "@/pages/contractors";
 import Profile from "@/pages/profile";
 import Feed from "@/pages/feed";
 import JobOrders from "@/pages/job-orders";
+import JobOrderDetails from "@/pages/job-order-details";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/businesses" component={Businesses} />
       <Route path="/contractors" component={Contractors} />
       <Route path="/job-orders" component={JobOrders} />
+      <Route path="/job-orders/:id" component={JobOrderDetails} />
       <Route path="/profile/:userType/:id" component={Profile} />
       <Route component={NotFound} />
     </Switch>

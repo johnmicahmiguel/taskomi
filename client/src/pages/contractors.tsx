@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import AppLayout from "@/components/AppLayout";
+import SEOHead from "@/components/SEOHead";
 import { Link } from "wouter";
 import type { User } from "@shared/schema";
 
@@ -172,6 +173,7 @@ export default function Contractors() {
 
   return (
     <AppLayout>
+      <SEOHead title="Find Contractors" description="Discover skilled contractors for your projects" />
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-foreground mb-2">Find Contractors</h1>
         <p className="text-muted-foreground">Discover skilled contractors for your projects</p>

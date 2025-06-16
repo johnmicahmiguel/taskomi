@@ -63,7 +63,7 @@ export default function Footer() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">Ready to Get Started?</h2>
           <p className="text-xl text-blue-100 mb-8">
-            Join thousands of businesses and contractors who trust ConnectPro
+            Join thousands of businesses and contractors who trust Taskomi
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -101,7 +101,7 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
             <div className="md:col-span-2">
-              <h3 className="text-2xl font-bold mb-4">ConnectPro</h3>
+              <h3 className="text-2xl font-bold mb-4">Taskomi</h3>
               <p className="text-slate-300 mb-6 max-w-md">
                 The marketplace that brings business owners and skilled contractors together for successful collaborations and long-term partnerships.
               </p>
@@ -153,7 +153,7 @@ export default function Footer() {
           </div>
 
           <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-slate-400 text-sm mb-4 md:mb-0">© 2024 ConnectPro. All rights reserved.</p>
+            <p className="text-slate-400 text-sm mb-4 md:mb-0">© 2025 Taskomi. All rights reserved.</p>
             <div className="flex space-x-6">
               <a href="#" className="text-slate-400 hover:text-white transition-colors">
                 <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">

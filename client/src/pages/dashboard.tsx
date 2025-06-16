@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import AppLayout from "@/components/AppLayout";
+import SEOHead from "@/components/SEOHead";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
@@ -137,6 +138,7 @@ export default function Dashboard() {
 
   return (
     <AppLayout>
+      <SEOHead title="Dashboard" />
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-foreground mb-2">
           Welcome back, {user.firstName}!
@@ -324,7 +326,7 @@ export default function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Get started with ConnectPro</CardDescription>
+            <CardDescription>Get started with Taskomi</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Button className="w-full justify-start" variant="outline">

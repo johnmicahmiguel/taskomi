@@ -119,7 +119,7 @@ export default function Pricing() {
 
         <div className="text-center mt-12">
           <p className="text-slate-600 mb-4">
-            For contractors, ConnectPro is always free to join. We only charge a small commission on completed projects.
+            For contractors, Taskomi is always free to join. We only charge a small commission on completed projects.
           </p>
           <button className="text-primary hover:text-primary/80 font-medium">
             Learn more about contractor pricing →

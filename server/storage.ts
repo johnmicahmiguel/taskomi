@@ -5,6 +5,9 @@ import {
   otpVerifications,
   posts,
   jobOrders,
+  jobApplications,
+  jobInquiries,
+  jobMessages,
   likes,
   comments,
   type User, 
@@ -19,6 +22,12 @@ import {
   type InsertPost,
   type JobOrder,
   type InsertJobOrder,
+  type JobApplication,
+  type InsertJobApplication,
+  type JobInquiry,
+  type InsertJobInquiry,
+  type JobMessage,
+  type InsertJobMessage,
   type Like,
   type InsertLike,
   type Comment,
@@ -59,6 +68,22 @@ export interface IStorage {
   updateJobOrder(id: number, updates: Partial<JobOrder>): Promise<JobOrder | undefined>;
   deleteJobOrder(id: number, businessOwnerId: number): Promise<boolean>;
   getJobOrdersByStatus(businessOwnerId: number, status: string): Promise<JobOrder[]>;
+  getJobOrderWithCounts(id: number): Promise<any | undefined>;
+  getJobOrdersWithCounts(businessOwnerId: number): Promise<any[]>;
+  // Job Applications
+  createJobApplication(application: InsertJobApplication): Promise<JobApplication>;
+  getJobApplicationsByJobOrder(jobOrderId: number): Promise<any[]>;
+  getJobApplicationById(id: number): Promise<JobApplication | undefined>;
+  updateJobApplicationStatus(id: number, status: string): Promise<JobApplication | undefined>;
+  // Job Inquiries
+  createJobInquiry(inquiry: InsertJobInquiry): Promise<JobInquiry>;
+  getJobInquiriesByJobOrder(jobOrderId: number): Promise<any[]>;
+  getJobInquiryById(id: number): Promise<JobInquiry | undefined>;
+  updateJobInquiryStatus(id: number, status: string): Promise<JobInquiry | undefined>;
+  // Job Messages
+  createJobMessage(message: InsertJobMessage): Promise<JobMessage>;
+  getJobMessagesByJobOrder(jobOrderId: number): Promise<any[]>;
+  markJobMessageAsRead(id: number): Promise<JobMessage | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -443,6 +468,182 @@ export class DatabaseStorage implements IStorage {
         eq(jobOrders.status, status)
       ))
       .orderBy(desc(jobOrders.createdAt));
+  }
+
+  async getJobOrderWithCounts(id: number): Promise<any | undefined> {
+    const [jobOrder] = await db.select({
+      id: jobOrders.id,
+      businessOwnerId: jobOrders.businessOwnerId,
+      title: jobOrders.title,
+      description: jobOrders.description,
+      budgetRange: jobOrders.budgetRange,
+      projectSize: jobOrders.projectSize,
+      deadline: jobOrders.deadline,
+      location: jobOrders.location,
+      requiredSkills: jobOrders.requiredSkills,
+      status: jobOrders.status,
+      createdAt: jobOrders.createdAt,
+      updatedAt: jobOrders.updatedAt,
+      applicationsCount: sql<number>`count(distinct ${jobApplications.id})`.as('applicationsCount'),
+      inquiriesCount: sql<number>`count(distinct ${jobInquiries.id})`.as('inquiriesCount'),
+      messagesCount: sql<number>`count(distinct ${jobMessages.id})`.as('messagesCount')
+    }).from(jobOrders)
+      .leftJoin(jobApplications, eq(jobOrders.id, jobApplications.jobOrderId))
+      .leftJoin(jobInquiries, eq(jobOrders.id, jobInquiries.jobOrderId))
+      .leftJoin(jobMessages, eq(jobOrders.id, jobMessages.jobOrderId))
+      .where(eq(jobOrders.id, id))
+      .groupBy(jobOrders.id);
+    return jobOrder || undefined;
+  }
+
+  async getJobOrdersWithCounts(businessOwnerId: number): Promise<any[]> {
+    return await db.select({
+      id: jobOrders.id,
+      businessOwnerId: jobOrders.businessOwnerId,
+      title: jobOrders.title,
+      description: jobOrders.description,
+      budgetRange: jobOrders.budgetRange,
+      projectSize: jobOrders.projectSize,
+      deadline: jobOrders.deadline,
+      location: jobOrders.location,
+      requiredSkills: jobOrders.requiredSkills,
+      status: jobOrders.status,
+      createdAt: jobOrders.createdAt,
+      updatedAt: jobOrders.updatedAt,
+      applicationsCount: sql<number>`count(distinct ${jobApplications.id})`.as('applicationsCount'),
+      inquiriesCount: sql<number>`count(distinct ${jobInquiries.id})`.as('inquiriesCount'),
+      messagesCount: sql<number>`count(distinct ${jobMessages.id})`.as('messagesCount')
+    }).from(jobOrders)
+      .leftJoin(jobApplications, eq(jobOrders.id, jobApplications.jobOrderId))
+      .leftJoin(jobInquiries, eq(jobOrders.id, jobInquiries.jobOrderId))
+      .leftJoin(jobMessages, eq(jobOrders.id, jobMessages.jobOrderId))
+      .where(eq(jobOrders.businessOwnerId, businessOwnerId))
+      .groupBy(jobOrders.id)
+      .orderBy(desc(jobOrders.createdAt));
+  }
+
+  async createJobApplication(application: InsertJobApplication): Promise<JobApplication> {
+    const [jobApplication] = await db.insert(jobApplications).values(application).returning();
+    return jobApplication;
+  }
+
+  async getJobApplicationsByJobOrder(jobOrderId: number): Promise<any[]> {
+    return await db.select({
+      id: jobApplications.id,
+      jobOrderId: jobApplications.jobOrderId,
+      contractorId: jobApplications.contractorId,
+      coverLetter: jobApplications.coverLetter,
+      proposedBudget: jobApplications.proposedBudget,
+      estimatedDuration: jobApplications.estimatedDuration,
+      status: jobApplications.status,
+      createdAt: jobApplications.createdAt,
+      updatedAt: jobApplications.updatedAt,
+      contractor: {
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        phoneNumber: users.phoneNumber,
+        location: users.location,
+        skills: users.skills,
+        bio: users.bio
+      }
+    }).from(jobApplications)
+      .leftJoin(users, eq(jobApplications.contractorId, users.id))
+      .where(eq(jobApplications.jobOrderId, jobOrderId))
+      .orderBy(desc(jobApplications.createdAt));
+  }
+
+  async getJobApplicationById(id: number): Promise<JobApplication | undefined> {
+    const [jobApplication] = await db.select().from(jobApplications).where(eq(jobApplications.id, id));
+    return jobApplication || undefined;
+  }
+
+  async updateJobApplicationStatus(id: number, status: string): Promise<JobApplication | undefined> {
+    const [jobApplication] = await db.update(jobApplications)
+      .set({ status })
+      .where(eq(jobApplications.id, id))
+      .returning();
+    return jobApplication || undefined;
+  }
+
+  async createJobInquiry(inquiry: InsertJobInquiry): Promise<JobInquiry> {
+    const [jobInquiry] = await db.insert(jobInquiries).values(inquiry).returning();
+    return jobInquiry;
+  }
+
+  async getJobInquiriesByJobOrder(jobOrderId: number): Promise<any[]> {
+    return await db.select({
+      id: jobInquiries.id,
+      jobOrderId: jobInquiries.jobOrderId,
+      contractorId: jobInquiries.contractorId,
+      subject: jobInquiries.subject,
+      message: jobInquiries.message,
+      status: jobInquiries.status,
+      createdAt: jobInquiries.createdAt,
+      updatedAt: jobInquiries.updatedAt,
+      contractor: {
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        phoneNumber: users.phoneNumber,
+        location: users.location,
+        skills: users.skills,
+        bio: users.bio
+      }
+    }).from(jobInquiries)
+      .leftJoin(users, eq(jobInquiries.contractorId, users.id))
+      .where(eq(jobInquiries.jobOrderId, jobOrderId))
+      .orderBy(desc(jobInquiries.createdAt));
+  }
+
+  async getJobInquiryById(id: number): Promise<JobInquiry | undefined> {
+    const [jobInquiry] = await db.select().from(jobInquiries).where(eq(jobInquiries.id, id));
+    return jobInquiry || undefined;
+  }
+
+  async updateJobInquiryStatus(id: number, status: string): Promise<JobInquiry | undefined> {
+    const [jobInquiry] = await db.update(jobInquiries)
+      .set({ status })
+      .where(eq(jobInquiries.id, id))
+      .returning();
+    return jobInquiry || undefined;
+  }
+
+  async createJobMessage(message: InsertJobMessage): Promise<JobMessage> {
+    const [jobMessage] = await db.insert(jobMessages).values(message).returning();
+    return jobMessage;
+  }
+
+  async getJobMessagesByJobOrder(jobOrderId: number): Promise<any[]> {
+    return await db.select({
+      id: jobMessages.id,
+      jobOrderId: jobMessages.jobOrderId,
+      senderId: jobMessages.senderId,
+      receiverId: jobMessages.receiverId,
+      message: jobMessages.message,
+      isRead: jobMessages.isRead,
+      createdAt: jobMessages.createdAt,
+      sender: {
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        userType: users.userType
+      }
+    }).from(jobMessages)
+      .leftJoin(users, eq(jobMessages.senderId, users.id))
+      .where(eq(jobMessages.jobOrderId, jobOrderId))
+      .orderBy(desc(jobMessages.createdAt));
+  }
+
+  async markJobMessageAsRead(id: number): Promise<JobMessage | undefined> {
+    const [jobMessage] = await db.update(jobMessages)
+      .set({ isRead: true })
+      .where(eq(jobMessages.id, id))
+      .returning();
+    return jobMessage || undefined;
   }
 }
 

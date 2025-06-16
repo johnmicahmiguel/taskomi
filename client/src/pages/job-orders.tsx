@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation, Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,11 +13,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Calendar, MapPin, DollarSign, Users, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Plus, Edit, Trash2, Calendar, MapPin, DollarSign, Users, Clock, CheckCircle, XCircle, Eye, FileText, MessageSquare, Mail } from "lucide-react";
 import { format } from "date-fns";
 import { insertJobOrderSchema } from "@shared/schema";
 import { z } from "zod";
 import AppLayout from "@/components/AppLayout";
+import SEOHead from "@/components/SEOHead";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { User } from "@shared/schema";
 
 type JobOrderFormData = z.infer<typeof insertJobOrderSchema>;
 
@@ -272,6 +276,7 @@ export default function JobOrders() {
 
   return (
     <AppLayout>
+      <SEOHead title="Job Orders" />
       <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -478,6 +483,11 @@ export default function JobOrders() {
                           </div>
                         </div>
                         <div className="flex space-x-2">
+                          <Link href={`/job-orders/${jobOrder.id}`}>
+                            <Button variant="outline" size="sm">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </Link>
                           <Button variant="outline" size="sm" onClick={() => handleEdit(jobOrder)}>
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -512,6 +522,25 @@ export default function JobOrders() {
                       <p className="text-foreground mb-4 line-clamp-3">
                         {jobOrder.description}
                       </p>
+                      
+                      {/* Activity Counters */}
+                      <div className="flex items-center space-x-4 mb-4 p-3 bg-muted/50 rounded-lg">
+                        <div className="flex items-center space-x-2 text-sm">
+                          <FileText className="h-4 w-4 text-blue-600" />
+                          <span className="font-medium">{jobOrder.applicationsCount || 0}</span>
+                          <span className="text-muted-foreground">Applications</span>
+                        </div>
+                        <div className="flex items-center space-x-2 text-sm">
+                          <MessageSquare className="h-4 w-4 text-green-600" />
+                          <span className="font-medium">{jobOrder.inquiriesCount || 0}</span>
+                          <span className="text-muted-foreground">Inquiries</span>
+                        </div>
+                        <div className="flex items-center space-x-2 text-sm">
+                          <Mail className="h-4 w-4 text-purple-600" />
+                          <span className="font-medium">{jobOrder.messagesCount || 0}</span>
+                          <span className="text-muted-foreground">Messages</span>
+                        </div>
+                      </div>
                       
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         {jobOrder.budgetRange && (

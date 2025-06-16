@@ -75,6 +75,39 @@ export const jobOrders = pgTable("job_orders", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const jobApplications = pgTable("job_applications", {
+  id: serial("id").primaryKey(),
+  jobOrderId: integer("job_order_id").notNull().references(() => jobOrders.id),
+  contractorId: integer("contractor_id").notNull().references(() => users.id),
+  coverLetter: text("cover_letter"),
+  proposedBudget: text("proposed_budget"),
+  estimatedDuration: text("estimated_duration"),
+  status: text("status").default("pending").notNull(), // 'pending', 'accepted', 'rejected', 'withdrawn'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const jobInquiries = pgTable("job_inquiries", {
+  id: serial("id").primaryKey(),
+  jobOrderId: integer("job_order_id").notNull().references(() => jobOrders.id),
+  contractorId: integer("contractor_id").notNull().references(() => users.id),
+  subject: text("subject").notNull(),
+  message: text("message").notNull(),
+  status: text("status").default("open").notNull(), // 'open', 'answered', 'closed'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const jobMessages = pgTable("job_messages", {
+  id: serial("id").primaryKey(),
+  jobOrderId: integer("job_order_id").notNull().references(() => jobOrders.id),
+  senderId: integer("sender_id").notNull().references(() => users.id),
+  receiverId: integer("receiver_id").notNull().references(() => users.id),
+  message: text("message").notNull(),
+  isRead: boolean("is_read").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const likes = pgTable("likes", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
@@ -127,6 +160,23 @@ export const insertJobOrderSchema = createInsertSchema(jobOrders).omit({
   updatedAt: true,
 });
 
+export const insertJobApplicationSchema = createInsertSchema(jobApplications).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertJobInquirySchema = createInsertSchema(jobInquiries).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertJobMessageSchema = createInsertSchema(jobMessages).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertLikeSchema = createInsertSchema(likes).omit({
   id: true,
   createdAt: true,
@@ -150,6 +200,12 @@ export type Post = typeof posts.$inferSelect;
 export type InsertPost = z.infer<typeof insertPostSchema>;
 export type JobOrder = typeof jobOrders.$inferSelect;
 export type InsertJobOrder = z.infer<typeof insertJobOrderSchema>;
+export type JobApplication = typeof jobApplications.$inferSelect;
+export type InsertJobApplication = z.infer<typeof insertJobApplicationSchema>;
+export type JobInquiry = typeof jobInquiries.$inferSelect;
+export type InsertJobInquiry = z.infer<typeof insertJobInquirySchema>;
+export type JobMessage = typeof jobMessages.$inferSelect;
+export type InsertJobMessage = z.infer<typeof insertJobMessageSchema>;
 export type Like = typeof likes.$inferSelect;
 export type InsertLike = z.infer<typeof insertLikeSchema>;
 export type Comment = typeof comments.$inferSelect;

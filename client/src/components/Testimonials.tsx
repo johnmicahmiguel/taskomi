@@ -4,14 +4,14 @@ export default function Testimonials() {
   const testimonials = [
     {
       rating: 5,
-      text: "ConnectPro helped us find amazing contractors for our digital transformation. The long-term partnership feature is a game-changer!",
+      text: "Taskomi helped us find amazing contractors for our digital transformation. The long-term partnership feature is a game-changer!",
       name: "Sarah Johnson",
       title: "CEO, TechStart Inc.",
       avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100"
     },
     {
       rating: 5,
-      text: "As a freelance developer, ConnectPro has connected me with quality businesses. I now have 3 long-term clients through the platform.",
+      text: "As a freelance developer, Taskomi has connected me with quality businesses. I now have 3 long-term clients through the platform.",
       name: "Michael Chen",
       title: "Full-Stack Developer",
       avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100"

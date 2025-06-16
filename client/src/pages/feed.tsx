@@ -15,6 +15,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import type { User } from "@shared/schema";
+import SEOHead from "@/components/SEOHead";
 
 interface Post {
   id: number;
@@ -404,6 +405,7 @@ export default function Feed() {
 
   return (
     <AppLayout showRightSidebar={true}>
+      <SEOHead title="Feed" />
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-foreground mb-2">Feed</h1>
         <p className="text-muted-foreground">Stay connected with the community</p>

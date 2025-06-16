@@ -303,9 +303,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get user profile by ID
+  // Get public profile data (for SEO and non-authenticated users)
+  app.get("/api/profile/:id/public", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+
+      const user = await storage.getUserProfile(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Return only public information for SEO
+      const publicProfile = {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        companyName: user.companyName,
+        userType: user.userType,
+        businessType: user.businessType,
+        location: user.location,
+        bio: user.bio,
+        isVerified: user.isVerified,
+        createdAt: user.createdAt,
+        // Don't include sensitive data like email, phone, skills, certifications, tags
+      };
+
+      res.json({ success: true, user: publicProfile });
+    } catch (error) {
+      console.error("Get public profile error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get user profile by ID (authenticated)
   app.get("/api/profile/:id", async (req, res) => {
     try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
       const userId = parseInt(req.params.id);
       if (isNaN(userId)) {
         return res.status(400).json({ message: "Invalid user ID" });
@@ -598,7 +637,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get job orders for business owner
+  // Get job orders for business owner with counts
   app.get("/api/job-orders", async (req, res) => {
     try {
       if (!req.session.userId) {
@@ -610,15 +649,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Only business owners can view job orders" });
       }
 
-      const { status } = req.query;
-      let jobOrders;
-
-      if (status && typeof status === "string") {
-        jobOrders = await storage.getJobOrdersByStatus(req.session.userId, status);
-      } else {
-        jobOrders = await storage.getJobOrdersByBusiness(req.session.userId);
-      }
-
+      const jobOrders = await storage.getJobOrdersWithCounts(req.session.userId);
       res.json({ success: true, jobOrders });
     } catch (error) {
       console.error("Get job orders error:", error);
@@ -626,7 +657,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get specific job order
+  // Get specific job order with details
   app.get("/api/job-orders/:id", async (req, res) => {
     try {
       if (!req.session.userId) {
@@ -638,7 +669,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid job order ID" });
       }
 
-      const jobOrder = await storage.getJobOrderById(jobOrderId);
+      const jobOrder = await storage.getJobOrderWithCounts(jobOrderId);
       if (!jobOrder) {
         return res.status(404).json({ message: "Job order not found" });
       }
@@ -647,7 +678,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
 
-      res.json({ success: true, jobOrder });
+      // Get applications, inquiries, and messages
+      const [applications, inquiries, messages] = await Promise.all([
+        storage.getJobApplicationsByJobOrder(jobOrderId),
+        storage.getJobInquiriesByJobOrder(jobOrderId),
+        storage.getJobMessagesByJobOrder(jobOrderId)
+      ]);
+
+      res.json({ 
+        success: true, 
+        jobOrder: {
+          ...jobOrder,
+          applications,
+          inquiries,
+          messages
+        }
+      });
     } catch (error) {
       console.error("Get job order error:", error);
       res.status(500).json({ message: "Internal server error" });
@@ -703,6 +749,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true, message: "Job order deleted successfully" });
     } catch (error) {
       console.error("Delete job order error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Job Application Routes
+  
+  // Update job application status
+  app.put("/api/job-applications/:id/status", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const applicationId = parseInt(req.params.id);
+      if (isNaN(applicationId)) {
+        return res.status(400).json({ message: "Invalid application ID" });
+      }
+
+      const { status } = req.body;
+      if (!status || !["pending", "accepted", "rejected", "withdrawn"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+
+      const application = await storage.getJobApplicationById(applicationId);
+      if (!application) {
+        return res.status(404).json({ message: "Application not found" });
+      }
+
+      // Verify the user owns the job order
+      const jobOrder = await storage.getJobOrderById(application.jobOrderId);
+      if (!jobOrder || jobOrder.businessOwnerId !== req.session.userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const updatedApplication = await storage.updateJobApplicationStatus(applicationId, status);
+      res.json({ success: true, application: updatedApplication });
+    } catch (error) {
+      console.error("Update application status error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Job Inquiry Routes
+  
+  // Update job inquiry status
+  app.put("/api/job-inquiries/:id/status", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const inquiryId = parseInt(req.params.id);
+      if (isNaN(inquiryId)) {
+        return res.status(400).json({ message: "Invalid inquiry ID" });
+      }
+
+      const { status } = req.body;
+      if (!status || !["open", "answered", "closed"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+
+      const inquiry = await storage.getJobInquiryById(inquiryId);
+      if (!inquiry) {
+        return res.status(404).json({ message: "Inquiry not found" });
+      }
+
+      // Verify the user owns the job order
+      const jobOrder = await storage.getJobOrderById(inquiry.jobOrderId);
+      if (!jobOrder || jobOrder.businessOwnerId !== req.session.userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const updatedInquiry = await storage.updateJobInquiryStatus(inquiryId, status);
+      res.json({ success: true, inquiry: updatedInquiry });
+    } catch (error) {
+      console.error("Update inquiry status error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Job Message Routes
+  
+  // Mark message as read
+  app.put("/api/job-messages/:id/read", async (req, res) => {
+    try {
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const messageId = parseInt(req.params.id);
+      if (isNaN(messageId)) {
+        return res.status(400).json({ message: "Invalid message ID" });
+      }
+
+      const updatedMessage = await storage.markJobMessageAsRead(messageId);
+      if (!updatedMessage) {
+        return res.status(404).json({ message: "Message not found" });
+      }
+
+      res.json({ success: true, message: updatedMessage });
+    } catch (error) {
+      console.error("Mark message as read error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
